@@ -1,51 +1,51 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3">
+<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-fire text-warning me-1"></i> {{ tr.grinding_orders }}
+            <h4 class="fw-bold mb-1 text-dark">
+                <i class="bi bi-fire text-warning me-2"></i>{{ tr.grinding_orders }}
             </h4>
             <span class="text-muted small">
-                {% if current_lang == 'mr' %}ग्राहकांचे धान्य दळण व मजुरी नोंदणी{% else %}Customer Grain Grinding Jobs & Tokens{% endif %}
+                {% if current_lang == 'mr' %}ग्राहकांचे धान्य दळण व मजुरी नोंदणी, टोकन व स्थिती ट्रॅकिंग{% else %}Customer Grain Grinding Jobs, Tokens & Status{% endif %}
             </span>
         </div>
         <div>
-            <a href="{% url 'grinding_order_create' %}" class="btn btn-wheat">
-                <i class="bi bi-plus-circle me-1"></i> + {{ tr.new_order }}
+            <a href="{% url 'grinding_order_create' %}" class="btn-gold-premium text-decoration-none shadow-sm">
+                <i class="bi bi-plus-lg"></i> + {{ tr.new_order }}
             </a>
         </div>
     </div>
 
     <!-- Filter Pills -->
-    <div class="card mb-3 shadow-sm border-0">
-        <div class="card-body py-2 px-3 d-flex flex-wrap gap-2 align-items-center">
-            <span class="text-muted small fw-semibold me-2"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
-            <a href="{% url 'grinding_order_list' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill">
+    <div class="card-premium mb-4">
+        <div class="card-body py-2.5 px-3 d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted small fw-bold me-2"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
+            <a href="{% url 'grinding_order_list' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-3 fw-semibold">
                 {{ tr.all }}
             </a>
-            <a href="{% url 'grinding_order_list' %}?status=PENDING" class="btn btn-sm {% if status_filter == 'PENDING' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill">
-                {{ tr.status_pending }}
+            <a href="{% url 'grinding_order_list' %}?status=PENDING" class="btn btn-sm {% if status_filter == 'PENDING' %}btn-warning text-dark fw-bold{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-3">
+                <i class="bi bi-hourglass-split me-1"></i> {{ tr.status_pending }}
             </a>
-            <a href="{% url 'grinding_order_list' %}?status=IN_PROGRESS" class="btn btn-sm {% if status_filter == 'IN_PROGRESS' %}btn-primary{% else %}btn-outline-primary{% endif %} rounded-pill">
-                {{ tr.status_in_progress }}
+            <a href="{% url 'grinding_order_list' %}?status=IN_PROGRESS" class="btn btn-sm {% if status_filter == 'IN_PROGRESS' %}btn-primary fw-bold{% else %}btn-outline-primary{% endif %} rounded-pill px-3">
+                <i class="bi bi-play-circle me-1"></i> {{ tr.status_in_progress }}
             </a>
-            <a href="{% url 'grinding_order_list' %}?status=COMPLETED" class="btn btn-sm {% if status_filter == 'COMPLETED' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill">
-                {{ tr.status_completed }}
+            <a href="{% url 'grinding_order_list' %}?status=COMPLETED" class="btn btn-sm {% if status_filter == 'COMPLETED' %}btn-success fw-bold{% else %}btn-outline-success{% endif %} rounded-pill px-3">
+                <i class="bi bi-check-circle me-1"></i> {{ tr.status_completed }}
             </a>
-            <a href="{% url 'grinding_order_list' %}?status=DELIVERED" class="btn btn-sm {% if status_filter == 'DELIVERED' %}btn-info text-white{% else %}btn-outline-info{% endif %} rounded-pill">
-                {{ tr.status_delivered }}
+            <a href="{% url 'grinding_order_list' %}?status=DELIVERED" class="btn btn-sm {% if status_filter == 'DELIVERED' %}btn-info text-white fw-bold{% else %}btn-outline-info{% endif %} rounded-pill px-3">
+                <i class="bi bi-box2-check me-1"></i> {{ tr.status_delivered }}
             </a>
         </div>
     </div>
 
     <!-- Orders Table -->
-    <div class="card shadow-sm border-0">
+    <div class="card-premium">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
+            <table class="table-premium table-hover align-middle">
+                <thead>
                     <tr>
                         <th>{{ tr.token_number }}</th>
                         <th>{{ tr.customer }}</th>
@@ -63,58 +63,77 @@
                     {% for ord in orders %}
                         <tr>
                             <td>
-                                <span class="badge bg-secondary-subtle text-secondary-emphasis border fw-bold fs-6">
-                                    {{ ord.token_number|default:ord.order_number }}
+                                <span class="badge bg-dark-subtle text-dark border fw-bold px-2 py-1 rounded-pill">
+                                    #{{ ord.token_number|default:ord.order_number }}
                                 </span>
                                 <div class="text-muted" style="font-size: 0.7rem;">{{ ord.order_number }}</div>
                             </td>
                             <td>
-                                <div class="fw-semibold">{{ ord.customer.name }}</div>
-                                <div class="text-muted small"><i class="bi bi-telephone"></i> {{ ord.customer.mobile }}</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle">
+                                        {{ ord.customer.name|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ ord.customer.name }}</div>
+                                        <div class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-telephone"></i> {{ ord.customer.mobile }}</div>
+                                    </div>
+                                </div>
                             </td>
                             <td>
-                                <strong>{{ ord.grain.display_name }}</strong>
+                                <strong class="text-dark">{{ ord.grain.display_name }}</strong>
                             </td>
                             <td>
                                 {% if ord.ownership_type == 'CUSTOMER' %}
-                                    <span class="badge bg-light text-dark border">
-                                        <i class="bi bi-person-fill me-1"></i>{{ tr.customer_grain }}
+                                    <span class="badge bg-light text-dark border px-2 py-1 rounded-pill">
+                                        <i class="bi bi-person-fill me-1 text-secondary"></i>{{ tr.customer_grain }}
                                     </span>
                                 {% else %}
-                                    <span class="badge bg-primary-subtle text-primary border">
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill">
                                         <i class="bi bi-shop me-1"></i>{{ tr.mill_grain }}
                                     </span>
                                 {% endif %}
                             </td>
-                            <td class="fw-bold">{{ ord.input_kg|floatformat:3 }} KG</td>
+                            <td class="fw-bold fs-6">{{ ord.input_kg|floatformat:3 }} <span class="small text-muted">KG</span></td>
                             <td>₹{{ ord.rate_per_kg|floatformat:2 }}</td>
-                            <td class="fw-bold text-primary fs-6">
-                                ₹{{ ord.charges|floatformat:2 }}
+                            <td>
+                                <div class="fw-bold text-primary fs-6">
+                                    ₹{{ ord.charges|floatformat:2 }}
+                                </div>
                                 {% if ord.is_paid %}
-                                    <span class="badge bg-success-subtle text-success ms-1" style="font-size: 0.65rem;">{{ tr.payment_paid }}</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5" style="font-size: 0.65rem;">{{ tr.payment_paid }}</span>
                                 {% else %}
-                                    <span class="badge bg-warning-subtle text-warning-emphasis ms-1" style="font-size: 0.65rem;">{{ tr.payment_unpaid }}</span>
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2 py-0.5" style="font-size: 0.65rem;">{{ tr.payment_unpaid }}</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <div>{{ ord.order_date|date:"d M Y" }}</div>
-                                <div class="text-muted" style="font-size: 0.75rem;">{{ ord.order_date|date:"h:i A" }}</div>
+                                <div class="fw-semibold">{{ ord.order_date|date:"d M Y" }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">{{ ord.order_date|date:"h:i A" }}</div>
                             </td>
                             <td>
                                 {% if ord.status == 'PENDING' %}
-                                    <span class="badge badge-pending">{{ ord.get_status_display }}</span>
+                                    <span class="status-pill status-pending">
+                                        <span class="status-dot"></span> {{ ord.get_status_display }}
+                                    </span>
                                 {% elif ord.status == 'IN_PROGRESS' %}
-                                    <span class="badge badge-progress">{{ ord.get_status_display }}</span>
+                                    <span class="status-pill status-progress">
+                                        <span class="status-dot"></span> {{ ord.get_status_display }}
+                                    </span>
                                 {% elif ord.status == 'COMPLETED' %}
-                                    <span class="badge badge-completed">{{ ord.get_status_display }}</span>
+                                    <span class="status-pill status-completed">
+                                        <span class="status-dot"></span> {{ ord.get_status_display }}
+                                    </span>
                                 {% elif ord.status == 'DELIVERED' %}
-                                    <span class="badge badge-delivered">{{ ord.get_status_display }}</span>
+                                    <span class="status-pill status-delivered">
+                                        <span class="status-dot"></span> {{ ord.get_status_display }}
+                                    </span>
                                 {% elif ord.status == 'CANCELLED' %}
-                                    <span class="badge badge-cancelled">{{ ord.get_status_display }}</span>
+                                    <span class="status-pill status-cancelled">
+                                        <span class="status-dot"></span> {{ ord.get_status_display }}
+                                    </span>
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-sm btn-outline-primary">
+                                <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-2.5">
                                     <i class="bi bi-receipt me-1"></i> {{ tr.view }}
                                 </a>
                             </td>
@@ -122,8 +141,8 @@
                     {% empty %}
                         <tr>
                             <td colspan="10" class="text-center py-5 text-muted">
-                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
-                                {% if current_lang == 'mr' %}कोणत्याही दळण ऑर्डर्स सापडल्या नाहीत.{% else %}No grinding orders found matching criteria.{% endif %}
+                                <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                                <div class="fw-semibold">{% if current_lang == 'mr' %}कोणत्याही दळण ऑर्डर्स सापडल्या नाहीत.{% else %}No grinding orders found matching criteria.{% endif %}</div>
                             </td>
                         </tr>
                     {% endfor %}
