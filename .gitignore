@@ -7,3 +7,14 @@ backups/
 media/
 staticfiles/
 .DS_Store
+
+venv/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+db.sqlite3
+media/
+staticfiles/
+.DS_Store
