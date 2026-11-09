@@ -1,0 +1,41 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 p-4 bg-white">
+                <div class="mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-warning-subtle text-warning rounded-circle p-3 mb-2" style="width: 80px; height: 80px;">
+                        <i class="bi bi-wifi-off fs-1"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-2">
+                    {% if current_lang == 'mr' %}
+                        इंटरनेट कनेक्शन उपलब्ध नाही
+                    {% else %}
+                        You Are Currently Offline
+                    {% endif %}
+                </h4>
+                <p class="text-muted small mb-4">
+                    {% if current_lang == 'mr' %}
+                        तुमचे डिव्हाइस सध्या इंटरनेटशी कनेक्ट नाही. नवीन बिले व ऑर्डर्स नोंदवण्यासाठी कृपया वाय-फाय किंवा मोबाईल डेटा तपासा.
+                    {% else %}
+                        ChakkiMate requires an active internet connection to save financial bills and sync inventory transactions.
+                    {% endif %}
+                </p>
+
+                <div class="d-grid gap-2">
+                    <button onclick="window.location.reload()" class="btn btn-brand btn-lg py-2">
+                        <i class="bi bi-arrow-clockwise me-1"></i> 
+                        {% if current_lang == 'mr' %}पुन्हा प्रयत्न करा (Retry){% else %}Reconnect &amp; Refresh{% endif %}
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-house me-1"></i> {{ tr.dashboard }}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

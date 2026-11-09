@@ -67,4 +67,9 @@ urlpatterns = [
 
     # Settings
     path('settings/', views.shop_settings_view, name='shop_settings'),
+
+    # PWA Endpoints
+    path('manifest.json', views.manifest_view, name='pwa_manifest'),
+    path('service-worker.js', views.service_worker_view, name='pwa_service_worker'),
+    path('offline/', views.offline_view, name='pwa_offline'),
 ]

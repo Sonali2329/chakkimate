@@ -256,3 +256,26 @@ class ChakkiMateBusinessLogicTests(TestCase):
         self.assertEqual(dash_response.status_code, 200)
         self.assertContains(dash_response, "डॅशबोर्ड")
         self.assertContains(dash_response, "दळण ऑर्डर्स")
+
+    def test_pwa_manifest_and_service_worker(self):
+        """
+        Verify PWA manifest, service worker with root scope, and offline fallback endpoints.
+        """
+        # 1. Manifest
+        manifest_res = self.client.get(reverse('pwa_manifest'))
+        self.assertEqual(manifest_res.status_code, 200)
+        self.assertIn("ChakkiMate", manifest_res.content.decode('utf-8'))
+        self.assertIn("standalone", manifest_res.content.decode('utf-8'))
+
+        # 2. Service Worker
+        sw_res = self.client.get(reverse('pwa_service_worker'))
+        self.assertEqual(sw_res.status_code, 200)
+        self.assertEqual(sw_res.headers.get('Service-Worker-Allowed'), '/')
+        self.assertIn('application/javascript', sw_res.headers.get('Content-Type'))
+        self.assertIn("chakkimate", sw_res.content.decode('utf-8'))
+
+        # 3. Offline Fallback
+        offline_res = self.client.get(reverse('pwa_offline'))
+        self.assertEqual(offline_res.status_code, 200)
+        self.assertContains(offline_res, "इंटरनेट कनेक्शन उपलब्ध नाही")
+

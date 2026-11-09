@@ -10,6 +10,8 @@ from django.contrib.auth.models import User
 from django.db.models import Sum, Count, Q, F
 from django.utils import timezone
 from datetime import timedelta
+import os
+from django.conf import settings
 
 from .models import (
     Customer, Supplier, Product, StockMovement,
@@ -900,3 +902,30 @@ def shop_settings_view(request):
         return redirect('shop_settings')
 
     return render(request, 'girni/settings.html', {'settings': settings})
+
+
+# ==========================================
+# PWA (Progressive Web App) ENDPOINTS
+# ==========================================
+def offline_view(request):
+    """Fallback offline page served by the service worker."""
+    return render(request, 'girni/offline.html')
+
+
+def service_worker_view(request):
+    """Serves the service worker with root scope permissions."""
+    sw_path = os.path.join(settings.BASE_DIR, 'static', 'service-worker.js')
+    with open(sw_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    response = HttpResponse(content, content_type='application/javascript')
+    response['Service-Worker-Allowed'] = '/'
+    return response
+
+
+def manifest_view(request):
+    """Serves the PWA web app manifest."""
+    mf_path = os.path.join(settings.BASE_DIR, 'static', 'manifest.json')
+    with open(mf_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    return HttpResponse(content, content_type='application/manifest+json')
+
