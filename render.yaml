@@ -2,7 +2,7 @@ services:
   - type: web
     name: chakkimate
     runtime: python
-    buildCommand: "pip install -r requirements.txt && python manage.py migrate && python manage.py seed_data"
+    buildCommand: "./build.sh"
     startCommand: "gunicorn chakkimate_core.wsgi:application"
     envVars:
       - key: PYTHON_VERSION

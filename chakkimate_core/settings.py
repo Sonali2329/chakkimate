@@ -57,9 +57,19 @@ TEMPLATES = [
 WSGI_APPLICATION = 'chakkimate_core.wsgi.application'
 
 # Database Configuration
-# Defaults to SQLite for instant plug-and-play local use,
-# or switches automatically to MySQL with utf8mb4 when DB_ENGINE or MYSQL_* is configured
-if os.environ.get('DB_ENGINE') == 'mysql' or os.environ.get('MYSQL_DATABASE'):
+# 1. DATABASE_URL (for Cloud Platforms like Render, Railway, AWS, Heroku)
+# 2. MySQL (when DB_ENGINE=mysql or MYSQL_DATABASE is set)
+# 3. SQLite3 (local fallback for zero-configuration)
+if os.environ.get('DATABASE_URL'):
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+elif os.environ.get('DB_ENGINE') == 'mysql' or os.environ.get('MYSQL_DATABASE'):
     try:
         import pymysql
         pymysql.install_as_MySQLdb()
@@ -122,6 +132,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok.io',
     'https://*.onrender.com',
     'https://*.railway.app',
+    'https://*.up.railway.app',
+    'https://*.pythonanywhere.com',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
 ]
