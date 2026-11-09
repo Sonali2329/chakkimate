@@ -279,3 +279,161 @@ class ChakkiMateBusinessLogicTests(TestCase):
         self.assertEqual(offline_res.status_code, 200)
         self.assertContains(offline_res, "इंटरनेट कनेक्शन उपलब्ध नाही")
 
+    def test_grinding_order_validation_and_walkin_creation(self):
+        """
+        Verify validation prevents crash when customer missing,
+        and auto-creates walk-in customer when details provided.
+        """
+        # 1. Missing customer should fail gracefully
+        res = self.client.post(reverse('grinding_order_create'), {
+            'grain_id': self.wheat.id,
+            'input_kg': '15.000',
+            'ownership_type': 'CUSTOMER'
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Please select an existing customer or enter walk-in customer details.")
+
+        # 2. Walk-in customer should succeed and create record
+        walkin_res = self.client.post(reverse('grinding_order_create'), {
+            'quick_customer_name': 'Walkin Raju',
+            'quick_customer_mobile': '9800000000',
+            'grain_id': self.wheat.id,
+            'input_kg': '12.000',
+            'ownership_type': 'CUSTOMER',
+            'is_paid': 'on',
+            'payment_mode': 'CASH'
+        }, follow=True)
+        self.assertEqual(walkin_res.status_code, 200)
+        new_cust = Customer.objects.filter(name='Walkin Raju').first()
+        self.assertIsNotNone(new_cust)
+        self.assertEqual(new_cust.customer_type, 'WALKIN')
+        self.assertTrue(GrindingOrder.objects.filter(customer=new_cust, input_kg=Decimal('12.000')).exists())
+
+    def test_sale_validation_and_stock_limit_enforcement(self):
+        """
+        Verify sale creation rejects empty customer and prevents over-selling stock.
+        """
+        # 1. Missing customer
+        res = self.client.post(reverse('sale_create'), {
+            'product_id[]': [self.wheat.id],
+            'quantity_kg[]': ['5.000'],
+            'rate_per_kg[]': ['38.00']
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Please select an existing customer or enter walk-in customer details.")
+
+        # 2. Attempting to sell more than available stock (current_stock is 100 KG)
+        res_over = self.client.post(reverse('sale_create'), {
+            'customer_id': self.customer.id,
+            'product_id[]': [self.wheat.id],
+            'quantity_kg[]': ['9999.000'],
+            'rate_per_kg[]': ['38.00']
+        })
+        self.assertEqual(res_over.status_code, 200)
+        self.assertContains(res_over, "Insufficient stock")
+
+    def test_purchase_validation_and_supplier_edit(self):
+        """
+        Verify purchase rejects missing supplier and supplier editing works.
+        """
+        # 1. Missing supplier
+        res = self.client.post(reverse('purchase_create'), {
+            'product_id[]': [self.wheat.id],
+            'quantity_kg[]': ['50.000'],
+            'rate_per_kg[]': ['30.00']
+        })
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Please select a supplier")
+
+        # 2. Edit supplier
+        edit_res = self.client.post(reverse('supplier_edit', kwargs={'supplier_id': self.supplier.id}), {
+            'name': 'Kisan Agro Traders',
+            'mobile': '9422009999',
+            'address': 'New Yard Kolhapur',
+            'notes': 'Preferred wheat partner'
+        }, follow=True)
+        self.assertEqual(edit_res.status_code, 200)
+        self.supplier.refresh_from_db()
+        self.assertEqual(self.supplier.name, 'Kisan Agro Traders')
+        self.assertEqual(self.supplier.mobile, '9422009999')
+
+    def test_product_deactivation_without_history_deletion(self):
+        """
+        SRS Section 4.5:
+        Enable/disable items without deleting historical transaction data.
+        """
+        # Issue a sale first
+        sale, invoice = SalesService.create_sale(
+            customer=self.customer,
+            items_data=[{
+                'product': self.wheat,
+                'quantity_kg': Decimal('5.000'),
+                'rate_per_kg': Decimal('38.00')
+            }]
+        )
+
+        # Deactivate product via edit
+        res = self.client.post(reverse('product_edit', kwargs={'product_id': self.wheat.id}), {
+            'name': self.wheat.name,
+            'product_type': self.wheat.product_type,
+            'purchase_rate': '30.00',
+            'selling_rate': '38.00',
+            'grinding_rate': '5.00',
+            'low_stock_threshold': '20.000',
+            # 'is_active' omitted so it becomes False
+        }, follow=True)
+        self.assertEqual(res.status_code, 200)
+        self.wheat.refresh_from_db()
+        self.assertFalse(self.wheat.is_active)
+
+        # Verify historical sale and invoice remain completely intact
+        sale.refresh_from_db()
+        self.assertEqual(sale.items.first().product_id, self.wheat.id)
+        self.assertEqual(sale.total, Decimal('190.00'))
+
+    def test_reports_financial_calculations(self):
+        """
+        SRS Section 4.13: Verify gross revenue, expenses, and net profit calculations.
+        """
+        # Create a sale of 380
+        SalesService.create_sale(
+            customer=self.customer,
+            items_data=[{
+                'product': self.wheat,
+                'quantity_kg': Decimal('10.000'),
+                'rate_per_kg': Decimal('38.00')
+            }],
+            amount_paid=Decimal('380.00')
+        )
+
+        # Create a grinding order of 100
+        GrindingService.create_order(
+            customer=self.customer,
+            grain=self.wheat,
+            input_kg=Decimal('20.000'),
+            rate_per_kg=Decimal('5.00'),
+            is_paid=True
+        )
+
+        # Record expense of 150
+        from girni.models import Expense
+        Expense.objects.create(
+            category='ELECTRICITY',
+            amount=Decimal('150.00'),
+            expense_date=timezone.now().date(),
+            description='Monthly bill'
+        )
+
+        # Check reports view
+        rep_res = self.client.get(reverse('reports'))
+        self.assertEqual(rep_res.status_code, 200)
+        # Gross revenue = 380 + 100 = 480
+        # Total expenses = 150
+        # Net profit = 480 - 150 = 330
+        self.assertEqual(rep_res.context['total_sales'], Decimal('380.00'))
+        self.assertEqual(rep_res.context['total_grinding'], Decimal('100.00'))
+        self.assertEqual(rep_res.context['total_expenses'], Decimal('150.00'))
+        self.assertEqual(rep_res.context['gross_revenue'], Decimal('480.00'))
+        self.assertEqual(rep_res.context['net_profit'], Decimal('330.00'))
+
+

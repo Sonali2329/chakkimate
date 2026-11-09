@@ -6,9 +6,14 @@
         <a href="{% url 'supplier_list' %}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i> {{ tr.suppliers }}
         </a>
-        <a href="{% url 'purchase_create' %}?supplier_id={{ supplier.id }}" class="btn btn-brand btn-sm">
-            <i class="bi bi-plus-circle me-1"></i> + {{ tr.new_purchase }}
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'supplier_edit' supplier.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i> {{ tr.edit }}
+            </a>
+            <a href="{% url 'purchase_create' %}?supplier_id={{ supplier.id }}" class="btn btn-brand btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> + {{ tr.new_purchase }}
+            </a>
+        </div>
     </div>
 
     <!-- Supplier Header -->

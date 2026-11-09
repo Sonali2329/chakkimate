@@ -89,6 +89,15 @@
                             </div>
                         </div>
 
+                        {% if action == 'Edit' %}
+                            <div class="form-check form-switch mb-4">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="isActiveSwitch" {% if product.is_active %}checked{% endif %}>
+                                <label class="form-check-label fw-semibold" for="isActiveSwitch">
+                                    सक्रिय उत्पादन (Active Product - अनचेक केल्यास विक्री व दळण यादीतून तात्पुरते लपवले जाईल)
+                                </label>
+                            </div>
+                        {% endif %}
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-brand btn-lg py-2">
                                 <i class="bi bi-check2-circle me-1"></i> {{ tr.save }}

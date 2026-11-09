@@ -193,13 +193,18 @@ def customer_create_view(request):
 def customer_edit_view(request, customer_id):
     cust = get_object_or_404(Customer, id=customer_id)
     if request.method == 'POST':
-        cust.name = request.POST.get('name', cust.name).strip()
-        cust.mobile = request.POST.get('mobile', cust.mobile).strip()
-        cust.address = request.POST.get('address', cust.address).strip()
-        cust.customer_type = request.POST.get('customer_type', cust.customer_type)
-        cust.save()
-        messages.success(request, f"Customer '{cust.name}' updated successfully.")
-        return redirect('customer_detail', customer_id=cust.id)
+        name = request.POST.get('name', '').strip()
+        mobile = request.POST.get('mobile', '').strip()
+        if not name or not mobile:
+            messages.error(request, "Name and Mobile number are required.")
+        else:
+            cust.name = name
+            cust.mobile = mobile
+            cust.address = request.POST.get('address', cust.address).strip()
+            cust.customer_type = request.POST.get('customer_type', cust.customer_type)
+            cust.save()
+            messages.success(request, f"Customer '{cust.name}' updated successfully.")
+            return redirect('customer_detail', customer_id=cust.id)
 
     return render(request, 'girni/customer_form.html', {'customer': cust, 'action': 'Edit'})
 
@@ -253,6 +258,28 @@ def supplier_detail_view(request, supplier_id):
     sup = get_object_or_404(Supplier, id=supplier_id)
     purchases = sup.purchases.all()
     return render(request, 'girni/supplier_detail.html', {'supplier': sup, 'purchases': purchases})
+
+
+@login_required
+def supplier_edit_view(request, supplier_id):
+    sup = get_object_or_404(Supplier, id=supplier_id)
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        mobile = request.POST.get('mobile', '').strip()
+        address = request.POST.get('address', '').strip()
+        notes = request.POST.get('notes', '').strip()
+        if not name or not mobile:
+            messages.error(request, "Name and Mobile number are required.")
+        else:
+            sup.name = name
+            sup.mobile = mobile
+            sup.address = address
+            sup.notes = notes
+            sup.save()
+            messages.success(request, f"Supplier '{sup.name}' updated successfully.")
+            return redirect('supplier_detail', supplier_id=sup.id)
+
+    return render(request, 'girni/supplier_form.html', {'supplier': sup, 'action': 'Edit'})
 
 
 # ==========================================
@@ -318,16 +345,21 @@ def product_create_view(request):
 def product_edit_view(request, product_id):
     prod = get_object_or_404(Product, id=product_id)
     if request.method == 'POST':
-        prod.name = request.POST.get('name', prod.name).strip()
-        prod.name_mr = request.POST.get('name_mr', prod.name_mr).strip()
-        prod.product_type = request.POST.get('product_type', prod.product_type)
-        prod.purchase_rate = Decimal(request.POST.get('purchase_rate', prod.purchase_rate) or 0)
-        prod.selling_rate = Decimal(request.POST.get('selling_rate', prod.selling_rate) or 0)
-        prod.grinding_rate = Decimal(request.POST.get('grinding_rate', prod.grinding_rate) or 0)
-        prod.low_stock_threshold = Decimal(request.POST.get('low_stock_threshold', prod.low_stock_threshold) or 20)
-        prod.save()
-        messages.success(request, f"Product '{prod.display_name}' updated successfully.")
-        return redirect('product_list')
+        name = request.POST.get('name', '').strip()
+        if not name:
+            messages.error(request, "Product name is required.")
+        else:
+            prod.name = name
+            prod.name_mr = request.POST.get('name_mr', '').strip()
+            prod.product_type = request.POST.get('product_type', prod.product_type)
+            prod.purchase_rate = Decimal(request.POST.get('purchase_rate', prod.purchase_rate) or 0)
+            prod.selling_rate = Decimal(request.POST.get('selling_rate', prod.selling_rate) or 0)
+            prod.grinding_rate = Decimal(request.POST.get('grinding_rate', prod.grinding_rate) or 0)
+            prod.low_stock_threshold = Decimal(request.POST.get('low_stock_threshold', prod.low_stock_threshold) or 20)
+            prod.is_active = request.POST.get('is_active') == 'on'
+            prod.save()
+            messages.success(request, f"Product '{prod.display_name}' updated successfully.")
+            return redirect('product_list')
 
     return render(request, 'girni/product_form.html', {'product': prod, 'action': 'Edit'})
 
@@ -355,6 +387,13 @@ def purchase_create_view(request):
         payment_mode = request.POST.get('payment_mode', 'CASH')
         notes = request.POST.get('notes', '')
 
+        if not supplier_id:
+            messages.error(request, "Please select a supplier. / कृपया पुरवठादार निवडा.")
+            return render(request, 'girni/purchase_form.html', {
+                'suppliers': suppliers,
+                'raw_products': raw_products,
+                'today': timezone.now().date()
+            })
         supplier = get_object_or_404(Supplier, id=supplier_id)
         
         # Parse dynamic item rows
@@ -492,6 +531,35 @@ def grinding_order_create_view(request):
         expected_delivery = request.POST.get('expected_delivery') or None
         notes = request.POST.get('notes', '')
 
+        # Validation checks
+        if not customer_id and not request.POST.get('quick_customer_name'):
+            messages.error(request, "Please select an existing customer or enter walk-in customer details.")
+            return render(request, 'girni/grinding_form.html', {
+                'customers': customers,
+                'raw_products': raw_products,
+                'default_expected_delivery': (timezone.now() + timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M")
+            })
+
+        if not grain_id:
+            messages.error(request, "Please select grain type.")
+            return render(request, 'girni/grinding_form.html', {
+                'customers': customers,
+                'raw_products': raw_products,
+                'default_expected_delivery': (timezone.now() + timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M")
+            })
+
+        try:
+            inp_val = Decimal(str(input_kg or 0))
+            if inp_val <= Decimal('0.000'):
+                raise ValueError("Weight must be greater than zero.")
+        except Exception:
+            messages.error(request, "Please enter a valid grain weight (KG) greater than zero.")
+            return render(request, 'girni/grinding_form.html', {
+                'customers': customers,
+                'raw_products': raw_products,
+                'default_expected_delivery': (timezone.now() + timedelta(hours=3)).strftime("%Y-%m-%dT%H:%M")
+            })
+
         # Walk-in customer instant create
         if not customer_id and request.POST.get('quick_customer_name'):
             cust_name = request.POST.get('quick_customer_name').strip()
@@ -584,6 +652,35 @@ def production_create_view(request):
         batch_date = request.POST.get('batch_date') or timezone.now().date()
         notes = request.POST.get('notes', '')
 
+        if not raw_id or not flour_id:
+            messages.error(request, "Please select both raw grain and finished flour.")
+            return render(request, 'girni/production_form.html', {
+                'raw_products': raw_products,
+                'flour_products': flour_products,
+                'today': timezone.now().date()
+            })
+
+        if raw_id == flour_id:
+            messages.error(request, "Raw grain and finished flour cannot be the same item.")
+            return render(request, 'girni/production_form.html', {
+                'raw_products': raw_products,
+                'flour_products': flour_products,
+                'today': timezone.now().date()
+            })
+
+        try:
+            inp_val = Decimal(str(input_kg or 0))
+            out_val = Decimal(str(output_kg or 0))
+            if inp_val <= Decimal('0.000') or out_val <= Decimal('0.000'):
+                raise ValueError()
+        except Exception:
+            messages.error(request, "Input and Output weights must be valid numbers greater than zero.")
+            return render(request, 'girni/production_form.html', {
+                'raw_products': raw_products,
+                'flour_products': flour_products,
+                'today': timezone.now().date()
+            })
+
         raw_prod = get_object_or_404(Product, id=raw_id)
         flour_prod = get_object_or_404(Product, id=flour_id)
 
@@ -634,6 +731,14 @@ def sale_create_view(request):
         payment_mode = request.POST.get('payment_mode', 'CASH')
         notes = request.POST.get('notes', '')
 
+        if not customer_id and not request.POST.get('quick_customer_name'):
+            messages.error(request, "Please select an existing customer or enter walk-in customer details.")
+            return render(request, 'girni/sale_form.html', {
+                'customers': customers,
+                'products': all_products,
+                'today': timezone.now().date()
+            })
+
         if not customer_id and request.POST.get('quick_customer_name'):
             cust_name = request.POST.get('quick_customer_name').strip()
             cust_mobile = request.POST.get('quick_customer_mobile', '0000000000').strip()
@@ -647,13 +752,19 @@ def sale_create_view(request):
 
         items_data = []
         for pid, qty, rate in zip(product_ids, quantities, rates):
-            if pid and qty and rate and float(qty) > 0:
-                prod = Product.objects.get(id=pid)
-                items_data.append({
-                    'product': prod,
-                    'quantity_kg': Decimal(qty),
-                    'rate_per_kg': Decimal(rate)
-                })
+            if pid and qty and rate:
+                try:
+                    qty_dec = Decimal(str(qty))
+                    rate_dec = Decimal(str(rate))
+                    if qty_dec > Decimal('0.000'):
+                        prod = Product.objects.get(id=pid)
+                        items_data.append({
+                            'product': prod,
+                            'quantity_kg': qty_dec,
+                            'rate_per_kg': rate_dec
+                        })
+                except Exception:
+                    pass
 
         if not items_data:
             messages.error(request, "Please add at least one grain or flour item.")
@@ -745,7 +856,15 @@ def record_payment_view(request):
         reference_number = request.POST.get('reference_number', '')
         notes = request.POST.get('notes', '')
 
+        if not invoice_id:
+            messages.error(request, "Invoice ID is missing.")
+            return redirect('invoice_list')
+
         invoice = get_object_or_404(Invoice, id=invoice_id)
+        if not amount:
+            messages.error(request, "Please enter a valid payment amount.")
+            return redirect('invoice_detail', invoice_id=invoice.id)
+
         try:
             payment = BillingPaymentService.record_payment(
                 invoice=invoice,

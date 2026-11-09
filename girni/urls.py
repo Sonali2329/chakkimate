@@ -21,6 +21,7 @@ urlpatterns = [
     path('suppliers/', views.supplier_list_view, name='supplier_list'),
     path('suppliers/new/', views.supplier_create_view, name='supplier_create'),
     path('suppliers/<int:supplier_id>/', views.supplier_detail_view, name='supplier_detail'),
+    path('suppliers/<int:supplier_id>/edit/', views.supplier_edit_view, name='supplier_edit'),
 
     # Products & Grains
     path('products/', views.product_list_view, name='product_list'),

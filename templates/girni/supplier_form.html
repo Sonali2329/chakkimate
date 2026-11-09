@@ -20,22 +20,22 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">{{ tr.name }} (पुरवठादाराचे किंवा व्यापार्याचे नाव)</label>
-                            <input type="text" name="name" class="form-control form-control-lg" placeholder="उदा. विशाल ग्रेन मर्चंट्स" required autofocus>
+                            <input type="text" name="name" class="form-control form-control-lg" value="{{ supplier.name|default:'' }}" placeholder="उदा. विशाल ग्रेन मर्चंट्स" required autofocus>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-bold">{{ tr.mobile }} (मोबाईल नंबर)</label>
-                            <input type="tel" name="mobile" class="form-control form-control-lg" placeholder="उदा. 9822123456" required>
+                            <input type="tel" name="mobile" class="form-control form-control-lg" value="{{ supplier.mobile|default:'' }}" placeholder="उदा. 9822123456" required>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">{{ tr.address }} (पत्ता / मार्केट यार्ड)</label>
-                            <textarea name="address" class="form-control" rows="2" placeholder="उदा. शॉप नं. ४२, कृषी उत्पन्न बाजार समिती"></textarea>
+                            <textarea name="address" class="form-control" rows="2" placeholder="उदा. शॉप नं. ४२, कृषी उत्पन्न बाजार समिती">{{ supplier.address|default:'' }}</textarea>
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label fw-semibold">{{ tr.notes }} (टीप / बँक खाते तपशील)</label>
-                            <textarea name="notes" class="form-control" rows="2" placeholder="उदा. बँक नाव, IFSC, खाते क्रमांक..."></textarea>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="उदा. बँक नाव, IFSC, खाते क्रमांक...">{{ supplier.notes|default:'' }}</textarea>
                         </div>
 
                         <div class="d-grid gap-2">

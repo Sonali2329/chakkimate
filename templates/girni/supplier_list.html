@@ -51,6 +51,9 @@
                                 <a href="{% url 'supplier_detail' s.id %}" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-eye me-1"></i> {{ tr.view }}
                                 </a>
+                                <a href="{% url 'supplier_edit' s.id %}" class="btn btn-outline-secondary btn-sm" title="{{ tr.edit }}">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
                             </td>
                         </tr>
                     {% empty %}
