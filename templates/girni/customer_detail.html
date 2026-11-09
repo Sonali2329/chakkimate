@@ -41,11 +41,16 @@
                 </div>
             </div>
             <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                <div class="border rounded p-3 bg-light d-inline-block text-start" style="min-width: 220px;">
+                <div class="border rounded p-3 bg-light d-inline-block text-start" style="min-width: 240px;">
                     <span class="text-muted small text-uppercase fw-semibold">{{ tr.total_outstanding }} (येणे बाकी):</span>
-                    <div class="fs-3 fw-bold {% if customer.total_outstanding > 0 %}text-danger{% else %}text-success{% endif %}">
+                    <div class="fs-2 fw-bold {% if customer.total_outstanding > 0 %}text-danger{% else %}text-success{% endif %}">
                         ₹{{ customer.total_outstanding|floatformat:2 }}
                     </div>
+                    {% if customer.total_outstanding > 0 %}
+                        <a href="https://wa.me/91{{ customer.mobile }}?text=नमस्कार%20{{ customer.name }}जी,%20{{ shop_settings.shop_name }}%20कडून%20आपले%20खात्यावर%20एकूण%20₹{{ customer.total_outstanding|floatformat:2 }}%20येणे%20बाकी%20आहे.%20कृपया%20लवकरात%20लवकर%20जमा%20करावे.%20धन्यवाद!" target="_blank" class="btn-whatsapp-vyapar mt-2 w-100 justify-content-center">
+                            <i class="bi bi-whatsapp"></i> व्हॉट्सॲपवर स्मरणपत्र पाठवा
+                        </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

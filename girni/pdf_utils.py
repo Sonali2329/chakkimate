@@ -143,8 +143,8 @@ def generate_invoice_pdf(invoice_id):
             Paragraph("<b>#</b>", cell_bold),
             Paragraph("<b>Item / Service Description</b>", cell_bold),
             Paragraph("<b>Quantity (KG)</b>", cell_right_bold),
-            Paragraph("<b>Rate (₹/KG)</b>", cell_right_bold),
-            Paragraph("<b>Amount (₹)</b>", cell_right_bold)
+            Paragraph("<b>Rate (Rs./KG)</b>", cell_right_bold),
+            Paragraph("<b>Amount (Rs.)</b>", cell_right_bold)
         ]
     ]
 
@@ -155,8 +155,8 @@ def generate_invoice_pdf(invoice_id):
                 Paragraph(str(idx), cell_style),
                 Paragraph(f"{it.product.name} ({it.product.get_product_type_display()})", cell_style),
                 Paragraph(f"{it.quantity_kg:.3f}", cell_right),
-                Paragraph(f"₹{it.rate_per_kg:.2f}", cell_right),
-                Paragraph(f"₹{it.line_total:.2f}", cell_right)
+                Paragraph(f"Rs. {it.rate_per_kg:.2f}", cell_right),
+                Paragraph(f"Rs. {it.line_total:.2f}", cell_right)
             ])
             idx += 1
     elif invoice.grinding_order:
@@ -166,8 +166,8 @@ def generate_invoice_pdf(invoice_id):
             Paragraph(str(idx), cell_style),
             Paragraph(desc, cell_style),
             Paragraph(f"{go.input_kg:.3f}", cell_right),
-            Paragraph(f"₹{go.rate_per_kg:.2f}", cell_right),
-            Paragraph(f"₹{go.charges:.2f}", cell_right)
+            Paragraph(f"Rs. {go.rate_per_kg:.2f}", cell_right),
+            Paragraph(f"Rs. {go.charges:.2f}", cell_right)
         ])
     else:
         item_rows.append([
@@ -175,7 +175,7 @@ def generate_invoice_pdf(invoice_id):
             Paragraph(invoice.notes or "Miscellaneous charges", cell_style),
             Paragraph("-", cell_right),
             Paragraph("-", cell_right),
-            Paragraph(f"₹{invoice.total:.2f}", cell_right)
+            Paragraph(f"Rs. {invoice.total:.2f}", cell_right)
         ])
 
     items_table = Table(item_rows, colWidths=[30, 250, 80, 80, 80])
@@ -193,11 +193,11 @@ def generate_invoice_pdf(invoice_id):
 
     # 4. Totals & Payment Summary Box
     summary_data = [
-        ["", Paragraph("<b>Subtotal:</b>", cell_right), Paragraph(f"₹{invoice.subtotal:.2f}", cell_right)],
-        ["", Paragraph("<b>Discount:</b>", cell_right), Paragraph(f"- ₹{invoice.discount:.2f}", cell_right)],
-        ["", Paragraph("<b>Grand Total:</b>", cell_right_bold), Paragraph(f"<b>₹{invoice.total:.2f}</b>", cell_right_bold)],
-        ["", Paragraph("<b>Amount Received:</b>", cell_right), Paragraph(f"₹{invoice.amount_paid:.2f}", cell_right)],
-        ["", Paragraph("<b>Balance Remaining:</b>", cell_right_bold), Paragraph(f"<b>₹{invoice.balance_due:.2f}</b>", cell_right_bold)],
+        ["", Paragraph("<b>Subtotal:</b>", cell_right), Paragraph(f"Rs. {invoice.subtotal:.2f}", cell_right)],
+        ["", Paragraph("<b>Discount:</b>", cell_right), Paragraph(f"- Rs. {invoice.discount:.2f}", cell_right)],
+        ["", Paragraph("<b>Grand Total:</b>", cell_right_bold), Paragraph(f"<b>Rs. {invoice.total:.2f}</b>", cell_right_bold)],
+        ["", Paragraph("<b>Amount Received:</b>", cell_right), Paragraph(f"Rs. {invoice.amount_paid:.2f}", cell_right)],
+        ["", Paragraph("<b>Balance Remaining:</b>", cell_right_bold), Paragraph(f"<b>Rs. {invoice.balance_due:.2f}</b>", cell_right_bold)],
     ]
     summary_table = Table(summary_data, colWidths=[240, 140, 140])
     summary_table.setStyle(TableStyle([

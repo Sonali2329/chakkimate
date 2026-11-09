@@ -9,7 +9,10 @@
         </a>
         <div class="d-flex flex-wrap gap-2">
             <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
-                <i class="bi bi-printer me-1"></i> {{ tr.print_invoice }}
+                <i class="bi bi-printer me-1"></i> {{ tr.print_invoice }} (A4)
+            </button>
+            <button onclick="printThermal()" class="btn btn-warning btn-sm fw-bold">
+                <i class="bi bi-receipt-cutoff me-1"></i> थर्मल पावती (58/80mm)
             </button>
             <a href="{% url 'invoice_pdf' invoice.id %}" class="btn btn-danger btn-sm">
                 <i class="bi bi-file-earmark-pdf me-1"></i> {{ tr.download_pdf }}
@@ -258,4 +261,14 @@
         </div>
     </div>
 </div>
+
+<script>
+    function printThermal() {
+        document.body.classList.add('print-thermal');
+        window.print();
+        setTimeout(() => {
+            document.body.classList.remove('print-thermal');
+        }, 1000);
+    }
+</script>
 {% endblock %}

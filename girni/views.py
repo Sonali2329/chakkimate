@@ -122,6 +122,58 @@ def dashboard_view(request):
         weekly_sales_data.append(float(s_val))
         weekly_grinding_data.append(float(g_val))
 
+    # 10. Vyapar Daybook (Today's Transactions Register)
+    daybook_entries = []
+    for g in GrindingOrder.objects.filter(order_date__date=today).select_related('customer', 'grain')[:8]:
+        daybook_entries.append({
+            'time': g.order_date,
+            'type': 'GRINDING',
+            'type_label': 'दळण मजुरी',
+            'voucher_no': g.token_number or g.order_number,
+            'party': g.customer.name,
+            'amount': g.charges,
+            'flow': 'INFLOW',
+            'mode': g.payment_mode or 'CASH',
+            'status': g.get_status_display()
+        })
+    for s in Sale.objects.filter(sale_date=today).select_related('customer')[:8]:
+        daybook_entries.append({
+            'time': timezone.now(),
+            'type': 'SALE',
+            'type_label': 'धान्य/पीठ विक्री',
+            'voucher_no': s.sale_number,
+            'party': s.customer.name,
+            'amount': s.total,
+            'flow': 'INFLOW',
+            'mode': s.payment_mode or 'CASH',
+            'status': 'पूर्ण'
+        })
+    for p in Payment.objects.filter(payment_date=today).select_related('customer')[:8]:
+        daybook_entries.append({
+            'time': timezone.now(),
+            'type': 'PAYMENT',
+            'type_label': 'रक्कम जमा (Inflow)',
+            'voucher_no': f"PAY-{p.id}",
+            'party': p.customer.name if p.customer else 'ग्राहक',
+            'amount': p.amount,
+            'flow': 'INFLOW',
+            'mode': p.payment_mode,
+            'status': 'जमा'
+        })
+    for e in Expense.objects.filter(expense_date=today)[:8]:
+        daybook_entries.append({
+            'time': timezone.now(),
+            'type': 'EXPENSE',
+            'type_label': 'खर्च (Outflow)',
+            'voucher_no': f"EXP-{e.id}",
+            'party': e.get_category_display(),
+            'amount': e.amount,
+            'flow': 'OUTFLOW',
+            'mode': e.payment_mode,
+            'status': 'खर्च'
+        })
+    daybook_entries.sort(key=lambda x: x['time'], reverse=True)
+
     context = {
         'today': today,
         'today_sales_total': today_sales_total,
@@ -129,7 +181,7 @@ def dashboard_view(request):
         'today_grinding_charges': today_grinding_charges,
         'today_payments_total': today_payments_total,
         'today_expenses_total': today_expenses_total,
-        'pending_orders': pending_orders[:5],
+        'pending_orders': pending_orders[:6],
         'pending_orders_count': pending_orders_count,
         'total_outstanding': total_outstanding,
         'raw_stock_total': raw_stock_total,
@@ -141,6 +193,7 @@ def dashboard_view(request):
         'weekly_labels': weekly_labels,
         'weekly_sales_data': weekly_sales_data,
         'weekly_grinding_data': weekly_grinding_data,
+        'daybook_entries': daybook_entries[:12],
     }
     return render(request, 'girni/dashboard.html', context)
 

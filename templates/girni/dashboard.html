@@ -1,342 +1,184 @@
 {% extends 'girni/base.html' %}
 
 {% block extra_head %}
-<!-- Chart.js for interactive analytics -->
+<!-- Chart.js for analytics -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
+<div class="container-fluid px-3 px-lg-4 py-3">
 
-    <!-- Premium Hero Welcome Banner -->
-    <div class="hero-welcome-card mb-4">
-        <div class="row align-items-center g-3">
-            <div class="col-lg-6">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-2.5 py-1 rounded-pill small">
-                        <i class="bi bi-circle-fill me-1" style="font-size: 0.55rem;"></i>
-                        {% if current_lang == 'mr' %}गिरणी ऑनलाइन &bull; कार्यरत{% else %}Mill Live &bull; Operational{% endif %}
-                    </span>
-                    <span class="text-white-50 small">
-                        <i class="bi bi-calendar3 me-1"></i> {{ today|date:"D, d M Y" }}
-                    </span>
+    <!-- Top Business Context Bar (Vyapar Style) -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3 pb-2 border-bottom">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                {{ shop_settings.shop_name_mr|default:shop_settings.shop_name }}
+                <span class="badge bg-secondary-subtle text-secondary-emphasis border ms-2 fs-6 fw-normal">
+                    {{ shop_settings.owner_name }} &bull; {{ today|date:"d M Y" }}
+                </span>
+            </h4>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small d-none d-lg-inline me-1">
+                <i class="bi bi-keyboard me-1"></i>शॉर्टकट: <strong>F2</strong> दळण &bull; <strong>F3</strong> विक्री &bull; <strong>F4</strong> ग्राहक &bull; <strong>F7</strong> खर्च
+            </span>
+            <a href="{% url 'grinding_order_create' %}" class="hotkey-btn hotkey-grinding shadow-sm">
+                <i class="bi bi-fire"></i> + नवीन दळण (F2)
+            </a>
+            <a href="{% url 'sale_create' %}" class="hotkey-btn hotkey-sale shadow-sm">
+                <i class="bi bi-cart-plus"></i> + विक्री बिल (F3)
+            </a>
+        </div>
+    </div>
+
+    <!-- 4 Vyapar Core Financial KPI Tiles -->
+    <div class="row g-3 mb-3">
+        <!-- 1. Receivables (You'll Receive / येणे बाकी) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vyapar-kpi-card vyapar-kpi-receivable">
+                <div>
+                    <div class="vyapar-kpi-label text-danger">
+                        <i class="bi bi-arrow-up-right me-1"></i>ग्राहकांकडून येणे बाकी (Receivables)
+                    </div>
+                    <div class="vyapar-kpi-amount text-danger">₹{{ total_outstanding|floatformat:2 }}</div>
                 </div>
-                <h3 class="fw-bold mb-1 text-white">
-                    {% if current_lang == 'mr' %}
-                        🌾 {{ shop_settings.shop_name_mr|default:shop_settings.shop_name }}
-                    {% else %}
-                        🌾 {{ shop_settings.shop_name }}
-                    {% endif %}
-                </h3>
-                <p class="text-white-50 mb-0 small">
-                    {% if current_lang == 'mr' %}
-                        स्वागत आहे, <strong>{{ shop_settings.owner_name }}</strong>! आजचा व्यवसाय आणि दळण कामे खालीलप्रमाणे आहेत.
-                    {% else %}
-                        Welcome back, <strong>{{ shop_settings.owner_name }}</strong>! Here is your mill's live summary today.
-                    {% endif %}
-                </p>
+                <div class="vyapar-kpi-sub">
+                    <span>एकूण उधारी खाती</span>
+                    <a href="{% url 'invoice_list' %}?status=UNPAID" class="text-danger fw-bold text-decoration-none">
+                        खाती पहा &rarr;
+                    </a>
+                </div>
             </div>
-            
-            <div class="col-lg-6">
-                <!-- Fast Action Shortcuts -->
-                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
-                    <a href="{% url 'grinding_order_create' %}" class="btn-gold-premium text-decoration-none shadow-sm">
-                        <i class="bi bi-fire"></i> + {{ tr.new_order }}
+        </div>
+
+        <!-- 2. Today's Grinding Orders & Revenue -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vyapar-kpi-card vyapar-kpi-grinding">
+                <div>
+                    <div class="vyapar-kpi-label text-warning-emphasis">
+                        <i class="bi bi-fire me-1"></i>आजचे दळण (Today's Grinding)
+                    </div>
+                    <div class="vyapar-kpi-amount text-warning-emphasis">₹{{ today_grinding_charges|floatformat:2 }}</div>
+                </div>
+                <div class="vyapar-kpi-sub">
+                    <span><strong>{{ today_grinding_count }}</strong> ऑर्डर्स आज</span>
+                    <a href="{% url 'grinding_order_list' %}" class="text-dark fw-bold text-decoration-none">
+                        ऑर्डर्स पहा &rarr;
                     </a>
-                    <a href="{% url 'sale_create' %}" class="btn-sapphire-premium text-decoration-none shadow-sm">
-                        <i class="bi bi-bag-plus"></i> + {{ tr.new_sale }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Today's Grain & Flour Sales -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vyapar-kpi-card vyapar-kpi-sale">
+                <div>
+                    <div class="vyapar-kpi-label text-primary">
+                        <i class="bi bi-cart-check me-1"></i>आजची धान्य व पीठ विक्री (Sales)
+                    </div>
+                    <div class="vyapar-kpi-amount text-primary">₹{{ today_sales_total|floatformat:2 }}</div>
+                </div>
+                <div class="vyapar-kpi-sub">
+                    <span>थेट विक्री बिल</span>
+                    <a href="{% url 'sale_list' %}" class="text-primary fw-bold text-decoration-none">
+                        विक्री यादी &rarr;
                     </a>
-                    <a href="{% url 'production_create' %}" class="hero-quick-chip">
-                        <i class="bi bi-funnel"></i> + {{ tr.new_batch }}
-                    </a>
-                    <a href="{% url 'purchase_create' %}" class="hero-quick-chip">
-                        <i class="bi bi-truck"></i> + {{ tr.new_purchase }}
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Today's Collections (Cash / UPI Inflow) -->
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="vyapar-kpi-card vyapar-kpi-collection">
+                <div>
+                    <div class="vyapar-kpi-label text-success">
+                        <i class="bi bi-cash-coin me-1"></i>आजचा गल्ला / एकूण जमा (Collections)
+                    </div>
+                    <div class="vyapar-kpi-amount text-success">₹{{ today_payments_total|floatformat:2 }}</div>
+                </div>
+                <div class="vyapar-kpi-sub">
+                    <span>खर्च: ₹{{ today_expenses_total|floatformat:2 }}</span>
+                    <a href="{% url 'expense_list' %}" class="text-success fw-bold text-decoration-none">
+                        तपशील &rarr;
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 6 Primary Business Metric Cards (SRS Section 4.2) -->
-    <div class="row g-3 mb-4">
-        <!-- 1. Today's Grinding Orders & Charges -->
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="metric-widget">
-                <div>
-                    <div class="metric-widget-top">
-                        <span class="metric-label-clean">{{ tr.today_grinding }}</span>
-                        <div class="metric-icon-box metric-icon-gold">
-                            <i class="bi bi-fire"></i>
-                        </div>
+    <!-- Operations Center: Active Grinding Queue (60%) & Stock Summary (40%) -->
+    <div class="row g-3 mb-3">
+        <!-- Active Grinding Orders Queue -->
+        <div class="col-lg-7 col-xl-8">
+            <div class="vyapar-card h-100">
+                <div class="vyapar-card-header">
+                    <div>
+                        <i class="bi bi-fire text-warning me-1.5"></i>
+                        <span>सध्याची चालू व प्रलंबित दळण कामे</span>
+                        <span class="badge bg-warning text-dark ms-1">{{ pending_orders_count }}</span>
                     </div>
-                    <div class="metric-value-clean">{{ today_grinding_count }} <span class="fs-6 fw-normal text-muted">{% if current_lang == 'mr' %}ऑर्डर्स{% else %}jobs{% endif %}</span></div>
-                </div>
-                <div class="metric-footer-clean">
-                    <span class="text-dark fw-bold">₹{{ today_grinding_charges|floatformat:2 }}</span>
-                    <span class="text-muted" style="font-size: 0.75rem;">{{ tr.charges }}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 2. Today's Grain & Flour Sales -->
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="metric-widget">
-                <div>
-                    <div class="metric-widget-top">
-                        <span class="metric-label-clean">{{ tr.today_sales }}</span>
-                        <div class="metric-icon-box metric-icon-sapphire">
-                            <i class="bi bi-bag-check"></i>
-                        </div>
-                    </div>
-                    <div class="metric-value-clean">₹{{ today_sales_total|floatformat:2 }}</div>
-                </div>
-                <div class="metric-footer-clean">
-                    <a href="{% url 'sale_list' %}" class="text-decoration-none fw-semibold text-primary" style="font-size: 0.78rem;">
-                        {% if current_lang == 'mr' %}विक्री पहा &rarr;{% else %}View sales &rarr;{% endif %}
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Today's Collections (Cash / UPI / Bank) -->
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="metric-widget">
-                <div>
-                    <div class="metric-widget-top">
-                        <span class="metric-label-clean">{{ tr.today_collections }}</span>
-                        <div class="metric-icon-box metric-icon-emerald">
-                            <i class="bi bi-cash-coin"></i>
-                        </div>
-                    </div>
-                    <div class="metric-value-clean">₹{{ today_payments_total|floatformat:2 }}</div>
-                </div>
-                <div class="metric-footer-clean">
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-1.5 py-0.5 rounded-pill" style="font-size: 0.7rem;">
-                        <i class="bi bi-arrow-down-left me-1"></i>{% if current_lang == 'mr' %}जमा रक्कम{% else %}Received{% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. Today's Expenses -->
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="metric-widget">
-                <div>
-                    <div class="metric-widget-top">
-                        <span class="metric-label-clean">{{ tr.today_expenses }}</span>
-                        <div class="metric-icon-box metric-icon-rose">
-                            <i class="bi bi-receipt-cutoff"></i>
-                        </div>
-                    </div>
-                    <div class="metric-value-clean">₹{{ today_expenses_total|floatformat:2 }}</div>
-                </div>
-                <div class="metric-footer-clean">
-                    <a href="{% url 'expense_create' %}" class="text-decoration-none text-danger fw-semibold" style="font-size: 0.78rem;">
-                        + {% if current_lang == 'mr' %}खर्च जोडा{% else %}Add expense{% endif %}
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. Pending Grinding Jobs -->
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="metric-widget">
-                <div>
-                    <div class="metric-widget-top">
-                        <span class="metric-label-clean">{{ tr.pending_grinding_orders }}</span>
-                        <div class="metric-icon-box metric-icon-indigo">
-                            <i class="bi bi-hourglass-split"></i>
-                        </div>
-                    </div>
-                    <div class="metric-value-clean">{{ pending_orders_count }} <span class="fs-6 fw-normal text-muted">{% if current_lang == 'mr' %}बाकी{% else %}wait{% endif %}</span></div>
-                </div>
-                <div class="metric-footer-clean">
-                    <a href="{% url 'grinding_order_list' %}?status=PENDING" class="text-decoration-none text-indigo fw-semibold" style="font-size: 0.78rem;">
-                        {% if current_lang == 'mr' %}प्रलंबित यादी &rarr;{% else %}Process queue &rarr;{% endif %}
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 6. Total Outstanding Dues -->
-        <div class="col-6 col-md-4 col-xl-2">
-            <div class="metric-widget">
-                <div>
-                    <div class="metric-widget-top">
-                        <span class="metric-label-clean">{{ tr.total_outstanding }}</span>
-                        <div class="metric-icon-box metric-icon-cyan">
-                            <i class="bi bi-wallet2"></i>
-                        </div>
-                    </div>
-                    <div class="metric-value-clean">₹{{ total_outstanding|floatformat:2 }}</div>
-                </div>
-                <div class="metric-footer-clean">
-                    <a href="{% url 'invoice_list' %}?status=UNPAID" class="text-decoration-none text-cyan fw-semibold" style="font-size: 0.78rem;">
-                        {% if current_lang == 'mr' %}उधारी खाती &rarr;{% else %}View dues &rarr;{% endif %}
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stock Summary Cards & Weekly Performance Chart -->
-    <div class="row g-3 mb-4">
-        <!-- Stock Summaries -->
-        <div class="col-lg-6">
-            <div class="card-premium h-100">
-                <div class="card-header-premium">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="metric-icon-box metric-icon-sapphire" style="width: 32px; height: 32px; font-size: 1rem;">
-                            <i class="bi bi-boxes"></i>
-                        </div>
-                        <span class="fw-bold">{{ tr.stock_inventory }}</span>
-                    </div>
-                    <a href="{% url 'stock_summary' %}" class="small text-decoration-none fw-semibold">
-                        {% if current_lang == 'mr' %}सर्व साठा पहा &rarr;{% else %}Full Inventory &rarr;{% endif %}
-                    </a>
-                </div>
-                <div class="card-body p-4">
-                    <div class="row g-3 mb-3 text-center">
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3 border">
-                                <div class="text-muted small fw-semibold text-uppercase mb-1">{{ tr.raw_grain_stock }}</div>
-                                <div class="fs-2 fw-bold text-primary">{{ raw_stock_total|floatformat:3 }} <span class="fs-6 text-muted">KG</span></div>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-light rounded-3 border">
-                                <div class="text-muted small fw-semibold text-uppercase mb-1">{{ tr.finished_flour_stock }}</div>
-                                <div class="fs-2 fw-bold text-success">{{ flour_stock_total|floatformat:3 }} <span class="fs-6 text-muted">KG</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {% if low_stock_items %}
-                        <div class="alert alert-warning py-2.5 px-3 mb-0 small border-0 bg-warning-subtle text-dark rounded-3 d-flex align-items-center gap-2 flex-wrap">
-                            <strong class="d-flex align-items-center"><i class="bi bi-exclamation-triangle-fill text-warning me-1.5"></i>{{ tr.low_stock_alerts }}:</strong>
-                            {% for p in low_stock_items|slice:":4" %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill">
-                                    {{ p.display_name }}: {{ p.current_stock|floatformat:1 }} KG
-                                </span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <div class="alert alert-success py-2.5 px-3 mb-0 small border-0 bg-success-subtle text-success rounded-3 d-flex align-items-center">
-                            <i class="bi bi-check-circle-fill me-2 fs-6"></i>
-                            {% if current_lang == 'mr' %}सर्व धान्याचा साठा पुरेसा आहे (स्टॉक सुरक्षित).{% else %}All grain and flour stocks are healthy.{% endif %}
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Weekly Performance Chart -->
-        <div class="col-lg-6">
-            <div class="card-premium h-100">
-                <div class="card-header-premium">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="metric-icon-box metric-icon-gold" style="width: 32px; height: 32px; font-size: 1rem;">
-                            <i class="bi bi-graph-up"></i>
-                        </div>
-                        <span class="fw-bold">{{ tr.weekly_overview }}</span>
-                    </div>
-                    <span class="badge bg-light text-muted border px-2 py-1 rounded-pill small">Last 7 Days</span>
-                </div>
-                <div class="card-body p-3">
-                    <canvas id="weeklyChart" height="150"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Active Grinding Orders & Recent Sales -->
-    <div class="row g-3">
-        <!-- Active / Pending Grinding Jobs -->
-        <div class="col-lg-7">
-            <div class="card-premium h-100">
-                <div class="card-header-premium">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="metric-icon-box metric-icon-gold" style="width: 32px; height: 32px; font-size: 1rem;">
-                            <i class="bi bi-fire"></i>
-                        </div>
-                        <span class="fw-bold">
-                            {{ tr.pending_grinding_orders }} ({{ pending_orders_count }})
-                        </span>
-                    </div>
-                    <a href="{% url 'grinding_order_create' %}" class="btn-gold-premium btn-sm text-decoration-none py-1.5 px-3 shadow-none">
-                        <i class="bi bi-plus-lg"></i> {{ tr.new_order }}
+                    <a href="{% url 'grinding_order_create' %}" class="btn btn-sm btn-outline-warning text-dark fw-bold">
+                        + नवीन दळण (F2)
                     </a>
                 </div>
                 <div class="table-responsive">
-                    <table class="table-premium table-hover align-middle">
+                    <table class="table-vyapar table-hover align-middle">
                         <thead>
                             <tr>
-                                <th>{{ tr.token_number }}</th>
-                                <th>{{ tr.customer }}</th>
-                                <th>{{ tr.grain_type }}</th>
-                                <th>{{ tr.input_weight }}</th>
-                                <th>{{ tr.charges }}</th>
-                                <th>{{ tr.status }}</th>
-                                <th class="text-end">{{ tr.actions }}</th>
+                                <th>टोकन #</th>
+                                <th>ग्राहक नाव व मोबाईल</th>
+                                <th>धान्य प्रकार</th>
+                                <th class="text-end">वजन (KG)</th>
+                                <th class="text-end">मजुरी (₹)</th>
+                                <th>स्थिती</th>
+                                <th class="text-end">कृती</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for ord in pending_orders %}
                                 <tr>
                                     <td>
-                                        <span class="badge bg-dark-subtle text-dark border px-2 py-1 rounded-pill fw-bold">
-                                            #{{ ord.token_number|default:ord.order_number }}
-                                        </span>
+                                        <span class="fw-bold text-dark">#{{ ord.token_number|default:ord.order_number }}</span>
                                     </td>
                                     <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="avatar-circle">
-                                                {{ ord.customer.name|slice:":1"|upper }}
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold text-dark">{{ ord.customer.name }}</div>
-                                                <div class="text-muted" style="font-size: 0.75rem;">{{ ord.customer.mobile }}</div>
-                                            </div>
-                                        </div>
+                                        <div class="fw-bold text-dark">{{ ord.customer.name }}</div>
+                                        <div class="text-muted" style="font-size: 0.72rem;">{{ ord.customer.mobile }}</div>
                                     </td>
                                     <td>
-                                        <span class="fw-semibold">{{ ord.grain.display_name }}</span>
+                                        {{ ord.grain.display_name }}
                                         {% if ord.ownership_type == 'CUSTOMER' %}
-                                            <span class="badge bg-light text-muted border ms-1">ग्राहक</span>
+                                            <span class="badge bg-light text-muted border">ग्राहक</span>
                                         {% endif %}
                                     </td>
-                                    <td class="fw-bold">{{ ord.input_kg|floatformat:3 }} <span class="small text-muted">KG</span></td>
-                                    <td class="text-primary fw-bold">₹{{ ord.charges|floatformat:2 }}</td>
+                                    <td class="text-end fw-bold">{{ ord.input_kg|floatformat:3 }} KG</td>
+                                    <td class="text-end fw-bold text-primary">₹{{ ord.charges|floatformat:2 }}</td>
                                     <td>
                                         {% if ord.status == 'PENDING' %}
-                                            <span class="status-pill status-pending">
-                                                <span class="status-dot"></span> {{ ord.get_status_display }}
-                                            </span>
+                                            <span class="vyapar-badge vyapar-badge-pending">प्रलंबित</span>
                                         {% elif ord.status == 'IN_PROGRESS' %}
-                                            <span class="status-pill status-progress">
-                                                <span class="status-dot"></span> {{ ord.get_status_display }}
-                                            </span>
+                                            <span class="vyapar-badge vyapar-badge-progress">चालू</span>
                                         {% endif %}
                                     </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
-                                            <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-outline-secondary rounded-start" title="{{ tr.view }}">
+                                            <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-outline-secondary" title="तपशील">
                                                 <i class="bi bi-eye"></i>
                                             </a>
                                             {% if ord.status == 'PENDING' %}
                                                 <form method="post" action="{% url 'grinding_order_status' ord.id %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="status" value="IN_PROGRESS">
-                                                    <button type="submit" class="btn btn-outline-primary rounded-end" title="Start Grinding">
-                                                        <i class="bi bi-play-fill"></i>
+                                                    <button type="submit" class="btn btn-primary" title="दळण सुरू करा">
+                                                        सुरू करा
                                                     </button>
                                                 </form>
                                             {% elif ord.status == 'IN_PROGRESS' %}
                                                 <form method="post" action="{% url 'grinding_order_status' ord.id %}" class="d-inline">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="status" value="COMPLETED">
-                                                    <button type="submit" class="btn btn-outline-success rounded-end" title="Mark Completed">
-                                                        <i class="bi bi-check-lg"></i>
+                                                    <button type="submit" class="btn btn-success" title="पूर्ण झाले">
+                                                        तयार
                                                     </button>
                                                 </form>
                                             {% endif %}
@@ -345,10 +187,9 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="7" class="text-center py-5 text-muted">
-                                        <i class="bi bi-check2-circle fs-1 text-success d-block mb-2"></i>
-                                        <div class="fw-semibold">{% if current_lang == 'mr' %}कोणतेही प्रलंबित दळण काम नाही!{% else %}No pending grinding orders!{% endif %}</div>
-                                        <div class="small text-muted">{% if current_lang == 'mr' %}सर्व दळण पूर्ण झाले आहेत.{% else %}All jobs are processed.{% endif %}</div>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-1"></i>
+                                        सर्व दळण कामे पूर्ण झाली आहेत! सध्या कोणतेही दळण प्रलंबित नाही.
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -358,66 +199,124 @@
             </div>
         </div>
 
-        <!-- Recent Sales & Invoices -->
-        <div class="col-lg-5">
-            <div class="card-premium h-100">
-                <div class="card-header-premium">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="metric-icon-box metric-icon-sapphire" style="width: 32px; height: 32px; font-size: 1rem;">
-                            <i class="bi bi-bag-check"></i>
-                        </div>
-                        <span class="fw-bold">{{ tr.recent_sales }}</span>
+        <!-- Stock Summary & Low Stock Warnings -->
+        <div class="col-lg-5 col-xl-4">
+            <div class="vyapar-card h-100">
+                <div class="vyapar-card-header">
+                    <div>
+                        <i class="bi bi-boxes text-success me-1.5"></i>
+                        <span>धान्य व पीठ साठा सारांश</span>
                     </div>
-                    <a href="{% url 'sale_create' %}" class="btn-sapphire-premium btn-sm text-decoration-none py-1.5 px-3 shadow-none">
-                        <i class="bi bi-plus-lg"></i> {{ tr.new_sale }}
+                    <a href="{% url 'stock_summary' %}" class="small text-decoration-none fw-bold">
+                        पूर्ण साठा &rarr;
                     </a>
                 </div>
-                <div class="table-responsive">
-                    <table class="table-premium table-hover align-middle">
-                        <thead>
-                            <tr>
-                                <th>{{ tr.sale_number }}</th>
-                                <th>{{ tr.customer }}</th>
-                                <th>{{ tr.total_amount }}</th>
-                                <th class="text-end">{{ tr.actions }}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for s in recent_sales %}
-                                <tr>
-                                    <td>
-                                        <div class="fw-bold text-dark">{{ s.sale_number }}</div>
-                                        <div class="text-muted" style="font-size: 0.75rem;">{{ s.sale_date|date:"d M, H:i" }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2">
-                                            <div class="avatar-circle" style="background: #E0E7FF; color: #4338CA;">
-                                                {{ s.customer.name|slice:":1"|upper }}
-                                            </div>
-                                            <span class="fw-semibold">{{ s.customer.name }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="fw-bold text-success fs-6">₹{{ s.total|floatformat:2 }}</td>
-                                    <td class="text-end">
-                                        {% if s.invoice %}
-                                            <a href="{% url 'invoice_detail' s.invoice.id %}" class="btn btn-outline-primary btn-sm rounded-pill px-2.5" title="{{ tr.view }}">
-                                                <i class="bi bi-receipt me-1"></i> बिल
-                                            </a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center py-5 text-muted">
-                                        <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
-                                        <div class="fw-semibold">{% if current_lang == 'mr' %}अद्याप कोणतीही विक्री झालेली नाही.{% else %}No recent sales recorded.{% endif %}</div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="p-3">
+                    <div class="row g-2 mb-3 text-center">
+                        <div class="col-6">
+                            <div class="border rounded p-2.5 bg-light">
+                                <div class="text-muted small fw-semibold">कच्चे धान्य (Raw)</div>
+                                <div class="fs-4 fw-bold text-primary">{{ raw_stock_total|floatformat:1 }} <span class="fs-6 text-muted">KG</span></div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2.5 bg-light">
+                                <div class="text-muted small fw-semibold">तयार पीठ (Flour)</div>
+                                <div class="fs-4 fw-bold text-success">{{ flour_stock_total|floatformat:1 }} <span class="fs-6 text-muted">KG</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Stock Alert Box -->
+                    {% if low_stock_items %}
+                        <div class="border border-danger-subtle bg-danger-subtle rounded p-2.5">
+                            <div class="fw-bold text-danger small mb-1">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>कमी साठा इशारा (Reorder Needed):
+                            </div>
+                            <div class="d-flex flex-wrap gap-1">
+                                {% for it in low_stock_items|slice:":5" %}
+                                    <span class="badge bg-white text-danger border border-danger-subtle">
+                                        {{ it.display_name }}: {{ it.current_stock|floatformat:1 }} KG
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="border border-success-subtle bg-success-subtle rounded p-2.5 text-success small">
+                            <i class="bi bi-check-circle-fill me-1"></i>सर्व धान्य व पीठ साठा सुरक्षित पातळीवर आहे.
+                        </div>
+                    {% endif %}
+
+                    <!-- Quick Chart -->
+                    <div class="mt-3">
+                        <canvas id="weeklyMiniChart" height="110"></canvas>
+                    </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Row 3: Vyapar Daybook (आजची दैनिक रोजकीर्द) -->
+    <div class="vyapar-card mb-4">
+        <div class="vyapar-card-header">
+            <div>
+                <i class="bi bi-journal-text text-primary me-1.5"></i>
+                <span>आजची दैनिक रोजकीर्द (Today's Daybook Register)</span>
+                <span class="text-muted small ms-2">सर्व आजचे व्यवहार एकाच ठिकाणी</span>
+            </div>
+            <span class="badge bg-light text-dark border">
+                {{ today|date:"d F Y" }}
+            </span>
+        </div>
+        <div class="table-responsive">
+            <table class="table-vyapar table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>वेळ</th>
+                        <th>पावती / व्हाउचर्स</th>
+                        <th>व्यवहार प्रकार</th>
+                        <th>ग्राहक / तपशील (Party)</th>
+                        <th>पेमेंट मोड</th>
+                        <th class="text-end">रक्कम (₹)</th>
+                        <th class="text-center">स्थिती</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for db in daybook_entries %}
+                        <tr>
+                            <td class="text-muted small">{{ db.time|date:"h:i A" }}</td>
+                            <td class="fw-bold">#{{ db.voucher_no }}</td>
+                            <td>
+                                {% if db.type == 'GRINDING' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border"><i class="bi bi-fire me-1"></i>दळण</span>
+                                {% elif db.type == 'SALE' %}
+                                    <span class="badge bg-primary-subtle text-primary border"><i class="bi bi-cart me-1"></i>विक्री</span>
+                                {% elif db.type == 'PAYMENT' %}
+                                    <span class="badge bg-success-subtle text-success border"><i class="bi bi-cash me-1"></i>जमा</span>
+                                {% elif db.type == 'EXPENSE' %}
+                                    <span class="badge bg-danger-subtle text-danger border"><i class="bi bi-dash me-1"></i>खर्च</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-semibold text-dark">{{ db.party }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ db.mode }}</span>
+                            </td>
+                            <td class="text-end fw-bold fs-6 {% if db.flow == 'INFLOW' %}inflow-text{% else %}outflow-text{% endif %}">
+                                {% if db.flow == 'INFLOW' %}+ ₹{{ db.amount|floatformat:2 }}{% else %}- ₹{{ db.amount|floatformat:2 }}{% endif %}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">{{ db.status }}</span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                आज अद्याप कोणतेही व्यवहार नोंदवलेले नाहीत.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -426,7 +325,7 @@
 {% block extra_scripts %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const ctx = document.getElementById('weeklyChart');
+        const ctx = document.getElementById('weeklyMiniChart');
         if (ctx) {
             new Chart(ctx, {
                 type: 'bar',
@@ -434,18 +333,16 @@
                     labels: {{ weekly_labels|safe }},
                     datasets: [
                         {
-                            label: '{% if current_lang == "mr" %}धान्य व पीठ विक्री (₹){% else %}Grain & Flour Sales (₹){% endif %}',
-                            data: {{ weekly_sales_data|safe }},
-                            backgroundColor: '#2563EB',
-                            borderRadius: 8,
-                            barThickness: 16
+                            label: 'दळण (₹)',
+                            data: {{ weekly_grinding_data|safe }},
+                            backgroundColor: '#D97706',
+                            borderRadius: 4
                         },
                         {
-                            label: '{% if current_lang == "mr" %}दळण मजुरी (₹){% else %}Grinding Charges (₹){% endif %}',
-                            data: {{ weekly_grinding_data|safe }},
-                            backgroundColor: '#F59E0B',
-                            borderRadius: 8,
-                            barThickness: 16
+                            label: 'विक्री (₹)',
+                            data: {{ weekly_sales_data|safe }},
+                            backgroundColor: '#1D4ED8',
+                            borderRadius: 4
                         }
                     ]
                 },
@@ -453,35 +350,11 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { 
-                            position: 'bottom', 
-                            labels: { 
-                                boxWidth: 12,
-                                usePointStyle: true,
-                                font: { family: "'Plus Jakarta Sans', sans-serif", weight: '600', size: 12 }
-                            } 
-                        },
-                        tooltip: {
-                            backgroundColor: '#0F172A',
-                            titleFont: { family: "'Plus Jakarta Sans', sans-serif", weight: '700' },
-                            bodyFont: { family: "'Plus Jakarta Sans', sans-serif" },
-                            padding: 10,
-                            cornerRadius: 8
-                        }
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } }
                     },
                     scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            grid: { color: '#F1F5F9' },
-                            ticks: {
-                                font: { family: "'Plus Jakarta Sans', sans-serif" },
-                                callback: function(value) { return '₹' + value; }
-                            }
-                        },
-                        x: { 
-                            grid: { display: false },
-                            ticks: { font: { family: "'Plus Jakarta Sans', sans-serif" } }
-                        }
+                        y: { beginAtZero: true, grid: { color: '#F1F5F9' }, ticks: { font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9 } } }
                     }
                 }
             });

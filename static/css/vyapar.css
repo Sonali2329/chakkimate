@@ -1,0 +1,401 @@
+/* ==========================================================================
+   ChakkiMate (चक्कीमेट) - Vyapar App Inspired ERP Design System
+   Professional Indian Business Accounting & Billing Standard
+   High Density • Fast Operations • High Contrast • Utilitarian Elegance
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
+:root {
+    /* Vyapar Signature Colors */
+    --vyapar-navy: #1A253C;
+    --vyapar-navy-light: #243354;
+    --vyapar-navy-dark: #121A2B;
+    
+    /* Transactional Colors */
+    --vyapar-green: #15803D; /* Inflow / Received / You'll Get */
+    --vyapar-green-bg: #DCFCE7;
+    --vyapar-red: #B91C1C; /* Outflow / Payables / Expenses / Due */
+    --vyapar-red-bg: #FEE2E2;
+    --vyapar-amber: #D97706; /* Wheat / Grinding / Pending */
+    --vyapar-amber-bg: #FEF3C7;
+    --vyapar-blue: #1D4ED8; /* Sales / Invoices */
+    --vyapar-blue-bg: #DBEAFE;
+    
+    /* Workspace Surfaces */
+    --vyapar-bg: #F1F5F9;
+    --vyapar-surface: #FFFFFF;
+    --vyapar-border: #CBD5E1;
+    --vyapar-border-light: #E2E8F0;
+    
+    /* Typography */
+    --vyapar-text: #0F172A;
+    --vyapar-text-muted: #64748B;
+    --vyapar-text-subtle: #94A3B8;
+}
+
+body {
+    font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--vyapar-bg);
+    color: var(--vyapar-text);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   Vyapar Top Enterprise Header
+   ========================================================================== */
+.vyapar-header {
+    background-color: var(--vyapar-navy);
+    color: #FFFFFF;
+    border-bottom: 2px solid var(--vyapar-amber);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    padding: 0.5rem 0;
+}
+
+.vyapar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #FFFFFF !important;
+}
+
+.vyapar-brand-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background: #FFFFFF;
+    padding: 2px;
+}
+
+.vyapar-brand-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    line-height: 1.1;
+}
+
+.vyapar-fy-pill {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #FEF3C7;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+
+/* Fast Action POS Hotkeys in Header */
+.hotkey-btn {
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+}
+
+.hotkey-badge {
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 0.65rem;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.hotkey-grinding {
+    background-color: var(--vyapar-amber);
+    color: #FFFFFF !important;
+}
+.hotkey-grinding:hover {
+    background-color: #B45309;
+}
+
+.hotkey-sale {
+    background-color: var(--vyapar-blue);
+    color: #FFFFFF !important;
+}
+.hotkey-sale:hover {
+    background-color: #1E40AF;
+}
+
+.hotkey-payment {
+    background-color: var(--vyapar-green);
+    color: #FFFFFF !important;
+}
+.hotkey-payment:hover {
+    background-color: #166534;
+}
+
+.hotkey-expense {
+    background-color: var(--vyapar-red);
+    color: #FFFFFF !important;
+}
+.hotkey-expense:hover {
+    background-color: #991B1B;
+}
+
+/* Sub-Navigation Module Bar */
+.vyapar-subnav {
+    background-color: #FFFFFF;
+    border-bottom: 1px solid var(--vyapar-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.vyapar-nav-link {
+    color: var(--vyapar-text);
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 0.65rem 0.95rem;
+    border-bottom: 3px solid transparent;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+}
+
+.vyapar-nav-link:hover {
+    color: var(--vyapar-navy);
+    background-color: #F8FAFC;
+}
+
+.vyapar-nav-link.active {
+    color: var(--vyapar-navy);
+    font-weight: 700;
+    border-bottom-color: var(--vyapar-amber);
+    background-color: #F8FAFC;
+}
+
+/* ==========================================================================
+   Vyapar 4 Core Financial KPI Summary Cards
+   ========================================================================== */
+.vyapar-kpi-card {
+    background: #FFFFFF;
+    border: 1px solid var(--vyapar-border);
+    border-radius: 8px;
+    padding: 1rem 1.15rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid var(--vyapar-navy);
+}
+
+.vyapar-kpi-receivable {
+    border-left-color: var(--vyapar-red);
+    background: linear-gradient(to right, #FFF5F5, #FFFFFF 20%);
+}
+
+.vyapar-kpi-grinding {
+    border-left-color: var(--vyapar-amber);
+    background: linear-gradient(to right, #FFFBEB, #FFFFFF 20%);
+}
+
+.vyapar-kpi-sale {
+    border-left-color: var(--vyapar-blue);
+    background: linear-gradient(to right, #EFF6FF, #FFFFFF 20%);
+}
+
+.vyapar-kpi-collection {
+    border-left-color: var(--vyapar-green);
+    background: linear-gradient(to right, #F0FDF4, #FFFFFF 20%);
+}
+
+.vyapar-kpi-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--vyapar-text-muted);
+}
+
+.vyapar-kpi-amount {
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin: 0.25rem 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.vyapar-kpi-sub {
+    font-size: 0.8rem;
+    color: var(--vyapar-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ==========================================================================
+   Vyapar Dense Tables (ERP Grade)
+   ========================================================================== */
+.vyapar-card {
+    background: #FFFFFF;
+    border: 1px solid var(--vyapar-border);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    margin-bottom: 1.25rem;
+}
+
+.vyapar-card-header {
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--vyapar-border);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+}
+
+.table-vyapar {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table-vyapar th {
+    background-color: #F8FAFC;
+    color: var(--vyapar-text-muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.65rem 0.85rem;
+    border-bottom: 1px solid var(--vyapar-border);
+    border-top: none;
+    white-space: nowrap;
+}
+
+.table-vyapar td {
+    padding: 0.65rem 0.85rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--vyapar-border-light);
+    font-size: 0.88rem;
+    color: var(--vyapar-text);
+}
+
+.table-vyapar tbody tr:hover {
+    background-color: #F8FAFC;
+}
+
+.table-vyapar tbody tr:nth-of-type(even) {
+    background-color: #FBFDFE;
+}
+
+/* Status Badges (Vyapar Stamp Style) */
+.vyapar-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-transform: uppercase;
+}
+
+.vyapar-badge-paid {
+    background-color: var(--vyapar-green-bg);
+    color: var(--vyapar-green);
+    border: 1px solid #BBF7D0;
+}
+
+.vyapar-badge-unpaid {
+    background-color: var(--vyapar-red-bg);
+    color: var(--vyapar-red);
+    border: 1px solid #FECACA;
+}
+
+.vyapar-badge-pending {
+    background-color: var(--vyapar-amber-bg);
+    color: var(--vyapar-amber);
+    border: 1px solid #FDE68A;
+}
+
+.vyapar-badge-progress {
+    background-color: var(--vyapar-blue-bg);
+    color: var(--vyapar-blue);
+    border: 1px solid #BFDBFE;
+}
+
+.vyapar-badge-completed {
+    background-color: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.vyapar-badge-delivered {
+    background-color: #F3E8FF;
+    color: #6B21A8;
+    border: 1px solid #E9D5FF;
+}
+
+/* Inflow / Outflow Markers for Daybook */
+.inflow-text {
+    color: var(--vyapar-green);
+    font-weight: 700;
+}
+
+.outflow-text {
+    color: var(--vyapar-red);
+    font-weight: 700;
+}
+
+/* WhatsApp Reminder Button */
+.btn-whatsapp-vyapar {
+    background-color: #25D366;
+    color: #FFFFFF !important;
+    font-weight: 700;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.btn-whatsapp-vyapar:hover {
+    background-color: #1EBE5D;
+}
+
+/* Compact Forms */
+.form-control, .form-select {
+    border-radius: 6px;
+    border: 1.5px solid var(--vyapar-border);
+    padding: 0.48rem 0.75rem;
+    font-size: 0.92rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--vyapar-navy);
+    box-shadow: 0 0 0 3px rgba(26, 37, 60, 0.15);
+}
+
+/* Thermal POS Receipt Print Styles */
+@media print {
+    .no-print, .vyapar-header, .vyapar-subnav, .mobile-bottom-nav {
+        display: none !important;
+    }
+    body {
+        background: #FFFFFF !important;
+        font-size: 11pt;
+        color: #000000;
+    }
+    .vyapar-card, .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
