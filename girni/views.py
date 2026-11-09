@@ -138,38 +138,38 @@ def dashboard_view(request):
         })
     for s in Sale.objects.filter(sale_date=today).select_related('customer')[:8]:
         daybook_entries.append({
-            'time': timezone.now(),
+            'time': s.created_at,
             'type': 'SALE',
             'type_label': 'धान्य/पीठ विक्री',
             'voucher_no': s.sale_number,
             'party': s.customer.name,
             'amount': s.total,
             'flow': 'INFLOW',
-            'mode': s.payment_mode or 'CASH',
+            'mode': 'CASH / बिल',
             'status': 'पूर्ण'
         })
     for p in Payment.objects.filter(payment_date=today).select_related('customer')[:8]:
         daybook_entries.append({
-            'time': timezone.now(),
+            'time': p.created_at,
             'type': 'PAYMENT',
             'type_label': 'रक्कम जमा (Inflow)',
             'voucher_no': f"PAY-{p.id}",
             'party': p.customer.name if p.customer else 'ग्राहक',
             'amount': p.amount,
             'flow': 'INFLOW',
-            'mode': p.payment_mode,
+            'mode': p.get_payment_mode_display(),
             'status': 'जमा'
         })
     for e in Expense.objects.filter(expense_date=today)[:8]:
         daybook_entries.append({
-            'time': timezone.now(),
+            'time': e.created_at,
             'type': 'EXPENSE',
             'type_label': 'खर्च (Outflow)',
             'voucher_no': f"EXP-{e.id}",
             'party': e.get_category_display(),
             'amount': e.amount,
             'flow': 'OUTFLOW',
-            'mode': e.payment_mode,
+            'mode': e.get_payment_mode_display(),
             'status': 'खर्च'
         })
     daybook_entries.sort(key=lambda x: x['time'], reverse=True)
