@@ -1,0 +1,88 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-truck text-primary me-1"></i> {{ tr.purchases }} (धान्य खरेदी)
+            </h4>
+            <span class="text-muted small">
+                {% if current_lang == 'mr' %}शेतकरी किंवा व्यापार्यांकडून कच्च्या धान्याची खरेदी व देयके{% else %}Supplier Grain Purchases and Stock Inward{% endif %}
+            </span>
+        </div>
+        <div>
+            <a href="{% url 'purchase_create' %}" class="btn btn-brand">
+                <i class="bi bi-plus-circle me-1"></i> + {{ tr.new_purchase }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Purchases Table -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ tr.order_number }}</th>
+                        <th>{{ tr.order_date }}</th>
+                        <th>{{ tr.suppliers }}</th>
+                        <th>{{ tr.items }}</th>
+                        <th class="text-end">{{ tr.total_amount }}</th>
+                        <th class="text-end">{{ tr.amount_paid }}</th>
+                        <th class="text-end">{{ tr.balance_due }}</th>
+                        <th>{{ tr.status }}</th>
+                        <th class="text-end">{{ tr.actions }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in purchases %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-dark">{{ p.purchase_number }}</span>
+                            </td>
+                            <td>{{ p.purchase_date|date:"d M Y" }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ p.supplier.name }}</div>
+                                <div class="text-muted small">{{ p.supplier.mobile }}</div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ p.items.count }} {% if current_lang == 'mr' %}धान्य प्रकार{% else %}items{% endif %}
+                                </span>
+                            </td>
+                            <td class="text-end fw-bold">₹{{ p.total|floatformat:2 }}</td>
+                            <td class="text-end text-success">₹{{ p.amount_paid|floatformat:2 }}</td>
+                            <td class="text-end fw-bold {% if p.balance_due > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                ₹{{ p.balance_due|floatformat:2 }}
+                            </td>
+                            <td>
+                                {% if p.payment_status == 'PAID' %}
+                                    <span class="badge bg-success">{{ tr.payment_paid }}</span>
+                                {% elif p.payment_status == 'PARTIAL' %}
+                                    <span class="badge bg-warning text-dark">{{ tr.payment_partial }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ tr.payment_unpaid }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'purchase_detail' p.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> {{ tr.view }}
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="bi bi-truck fs-2 d-block mb-2"></i>
+                                {% if current_lang == 'mr' %}कोणतीही खरेदी नोंद आढळली नाही.{% else %}No purchases recorded yet.{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,303 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-cart-check text-primary me-2"></i>{{ tr.new_sale }} (धान्य व पीठ विक्री बिल)
+                    </h5>
+                    <a href="{% url 'sale_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> {{ tr.cancel }}
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="saleForm">
+                        {% csrf_token %}
+
+                        <!-- Customer Selection & Walk-in Option -->
+                        <div class="mb-4 p-3 bg-light rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">
+                                    <i class="bi bi-person me-1"></i>{{ tr.customer }}
+                                </label>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" id="toggleWalkinBtn">
+                                    + {% if current_lang == 'mr' %}किरकोळ (Walk-in) ग्राहक त्वरित जोडा{% else %}Quick Walk-in Customer{% endif %}
+                                </button>
+                            </div>
+
+                            <div id="existingCustomerDiv">
+                                <select name="customer_id" id="customerSelect" class="form-select form-select-lg">
+                                    <option value="">-- {% if current_lang == 'mr' %}ग्राहक निवडा{% else %}Select Customer{% endif %} --</option>
+                                    {% for c in customers %}
+                                        <option value="{{ c.id }}">{{ c.name }} ({{ c.mobile }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div id="walkinCustomerDiv" class="row g-2 mt-2 d-none">
+                                <div class="col-md-6">
+                                    <input type="text" name="quick_customer_name" id="quickName" class="form-control" placeholder="{% if current_lang == 'mr' %}ग्राहकाचे नाव{% else %}Customer Name{% endif %}">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="tel" name="quick_customer_mobile" id="quickMobile" class="form-control" placeholder="{% if current_lang == 'mr' %}मोबाईल नंबर{% else %}Mobile Number{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Items Table -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="fw-bold mb-0 text-dark">
+                                    <i class="bi bi-list-check me-1"></i>{{ tr.items }} (धान्य / पीठ निवडा)
+                                </h6>
+                                <button type="button" class="btn btn-outline-primary btn-sm" id="addItemRowBtn">
+                                    <i class="bi bi-plus-circle me-1"></i> + {% if current_lang == 'mr' %}आणखी वस्तू जोडा{% else %}Add Item{% endif %}
+                                </button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle" id="itemsTable">
+                                    <thead class="table-light small">
+                                        <tr>
+                                            <th style="width: 40%;">{{ tr.product_name }}</th>
+                                            <th style="width: 20%;">{{ tr.quantity_kg }}</th>
+                                            <th style="width: 20%;">{{ tr.selling_rate_kg }}</th>
+                                            <th style="width: 15%;" class="text-end">{{ tr.charges }} (₹)</th>
+                                            <th style="width: 5%;" class="text-center"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemsBody">
+                                        <!-- Row 1 -->
+                                        <tr class="item-row">
+                                            <td>
+                                                <select name="product_id[]" class="form-select product-select" required>
+                                                    <option value="">-- निवडा / Select --</option>
+                                                    {% for p in products %}
+                                                        <option value="{{ p.id }}" data-rate="{{ p.selling_rate }}" data-stock="{{ p.current_stock }}">
+                                                            {{ p.display_name }} (साठा: {{ p.current_stock|floatformat:1 }} KG | दर: ₹{{ p.selling_rate }}/किलो)
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                                <div class="small text-muted stock-indicator mt-1"></div>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.001" min="0.05" name="quantity_kg[]" class="form-control qty-input fw-semibold" placeholder="0.000" required>
+                                                    <span class="input-group-text small">KG</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <span class="input-group-text small">₹</span>
+                                                    <input type="number" step="0.01" min="0" name="rate_per_kg[]" class="form-control rate-input fw-semibold" placeholder="0.00" required>
+                                                </div>
+                                            </td>
+                                            <td class="text-end fw-bold line-total fs-6 text-primary">₹0.00</td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-outline-danger btn-sm remove-row-btn" title="Remove">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Totals & Payment Summary Box -->
+                        <div class="row justify-content-end mb-4">
+                            <div class="col-md-6 col-lg-5">
+                                <div class="bg-light p-3 rounded-3 border">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">{{ tr.subtotal }}:</span>
+                                        <span class="fw-bold" id="subtotalDisplay">₹0.00</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="text-muted">{{ tr.discount }}:</span>
+                                        <div class="input-group input-group-sm" style="width: 120px;">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" step="0.01" min="0" name="discount" id="discountInput" class="form-control text-end" value="0.00">
+                                        </div>
+                                    </div>
+                                    <div class="d-flex justify-content-between border-top pt-2 mb-3">
+                                        <span class="fs-5 fw-bold text-dark">{{ tr.total_amount }}:</span>
+                                        <span class="fs-4 fw-bold text-success" id="finalTotalDisplay">₹0.00</span>
+                                    </div>
+
+                                    <!-- Immediate Payment Options -->
+                                    <div class="border-top pt-3">
+                                        <label class="form-label fw-bold small text-muted text-uppercase mb-1">
+                                            {{ tr.amount_paid }} (जमा रक्कम)
+                                        </label>
+                                        <div class="input-group mb-2">
+                                            <span class="input-group-text">₹</span>
+                                            <input type="number" step="0.01" min="0" name="amount_paid" id="amountPaidInput" class="form-control fw-bold" placeholder="0.00">
+                                            <button type="button" class="btn btn-outline-success btn-sm" id="payFullBtn">
+                                                {% if current_lang == 'mr' %}पूर्ण जमा{% else %}Full Paid{% endif %}
+                                            </button>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted mb-2">
+                                            <span>{{ tr.balance_due }}:</span>
+                                            <span class="fw-bold text-danger" id="balanceDisplay">₹0.00</span>
+                                        </div>
+
+                                        <label class="form-label small text-muted">{{ tr.payment_mode }}</label>
+                                        <select name="payment_mode" class="form-select form-select-sm">
+                                            <option value="CASH">{{ tr.cash }}</option>
+                                            <option value="UPI">{{ tr.upi }}</option>
+                                            <option value="BANK_TRANSFER">{{ tr.bank_transfer }}</option>
+                                            <option value="OTHER">{{ tr.other }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ tr.notes }}</label>
+                            <input type="text" name="notes" class="form-control" placeholder="{% if current_lang == 'mr' %}काही अतिरिक्त टीप...{% else %}Sale remarks...{% endif %}">
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'sale_list' %}" class="btn btn-light px-4">{{ tr.cancel }}</a>
+                            <button type="submit" class="btn btn-brand btn-lg px-5">
+                                <i class="bi bi-check2-circle me-1"></i> {{ tr.save }} &amp; {% if current_lang == 'mr' %}बिल तयार करा{% else %}Generate Invoice{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const itemsBody = document.getElementById("itemsBody");
+        const addItemRowBtn = document.getElementById("addItemRowBtn");
+        const subtotalDisplay = document.getElementById("subtotalDisplay");
+        const discountInput = document.getElementById("discountInput");
+        const finalTotalDisplay = document.getElementById("finalTotalDisplay");
+        const amountPaidInput = document.getElementById("amountPaidInput");
+        const balanceDisplay = document.getElementById("balanceDisplay");
+        const payFullBtn = document.getElementById("payFullBtn");
+
+        const toggleWalkinBtn = document.getElementById("toggleWalkinBtn");
+        const customerSelect = document.getElementById("customerSelect");
+        const walkinDiv = document.getElementById("walkinCustomerDiv");
+
+        // Toggle Walkin Customer
+        let isWalkin = false;
+        toggleWalkinBtn.addEventListener("click", function() {
+            isWalkin = !isWalkin;
+            if (isWalkin) {
+                walkinDiv.classList.remove("d-none");
+                customerSelect.value = "";
+                customerSelect.disabled = true;
+                toggleWalkinBtn.textContent = "{% if current_lang == 'mr' %}&larr; अस्तित्वात असलेला ग्राहक निवडा{% else %}&larr; Select Existing Customer{% endif %}";
+            } else {
+                walkinDiv.classList.add("d-none");
+                customerSelect.disabled = false;
+                toggleWalkinBtn.textContent = "+ {% if current_lang == 'mr' %}किरकोळ (Walk-in) ग्राहक त्वरित जोडा{% else %}Quick Walk-in Customer{% endif %}";
+            }
+        });
+
+        // Recalculate everything
+        function recalculate() {
+            let subtotal = 0;
+            const rows = itemsBody.querySelectorAll(".item-row");
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector(".qty-input").value) || 0;
+                const rate = parseFloat(row.querySelector(".rate-input").value) || 0;
+                const lineTot = qty * rate;
+                row.querySelector(".line-total").textContent = "₹" + lineTot.toFixed(2);
+                subtotal += lineTot;
+            });
+
+            const discount = parseFloat(discountInput.value) || 0;
+            const finalTotal = Math.max(0, subtotal - discount);
+
+            subtotalDisplay.textContent = "₹" + subtotal.toFixed(2);
+            finalTotalDisplay.textContent = "₹" + finalTotal.toFixed(2);
+
+            let paid = parseFloat(amountPaidInput.value) || 0;
+            if (paid > finalTotal) {
+                paid = finalTotal;
+                amountPaidInput.value = finalTotal.toFixed(2);
+            }
+            const bal = Math.max(0, finalTotal - paid);
+            balanceDisplay.textContent = "₹" + bal.toFixed(2);
+        }
+
+        function bindRowEvents(row) {
+            const prodSelect = row.querySelector(".product-select");
+            const rateInput = row.querySelector(".rate-input");
+            const qtyInput = row.querySelector(".qty-input");
+            const removeBtn = row.querySelector(".remove-row-btn");
+            const stockInd = row.querySelector(".stock-indicator");
+
+            prodSelect.addEventListener("change", function() {
+                const opt = prodSelect.options[prodSelect.selectedIndex];
+                const rate = opt.getAttribute("data-rate");
+                const stock = opt.getAttribute("data-stock");
+                if (rate) rateInput.value = parseFloat(rate).toFixed(2);
+                if (stock) {
+                    stockInd.textContent = "शिल्लक साठा: " + parseFloat(stock).toFixed(3) + " KG";
+                } else {
+                    stockInd.textContent = "";
+                }
+                recalculate();
+            });
+
+            qtyInput.addEventListener("input", recalculate);
+            rateInput.addEventListener("input", recalculate);
+
+            removeBtn.addEventListener("click", function() {
+                if (itemsBody.querySelectorAll(".item-row").length > 1) {
+                    row.remove();
+                    recalculate();
+                } else {
+                    alert("At least one item is required.");
+                }
+            });
+        }
+
+        // Bind first row
+        bindRowEvents(itemsBody.querySelector(".item-row"));
+
+        // Add Row
+        addItemRowBtn.addEventListener("click", function() {
+            const firstRow = itemsBody.querySelector(".item-row");
+            const newRow = firstRow.cloneNode(true);
+            newRow.querySelector(".qty-input").value = "";
+            newRow.querySelector(".rate-input").value = "";
+            newRow.querySelector(".line-total").textContent = "₹0.00";
+            newRow.querySelector(".stock-indicator").textContent = "";
+            newRow.querySelector(".product-select").value = "";
+            itemsBody.appendChild(newRow);
+            bindRowEvents(newRow);
+        });
+
+        discountInput.addEventListener("input", recalculate);
+        amountPaidInput.addEventListener("input", recalculate);
+
+        payFullBtn.addEventListener("click", function() {
+            let subtotal = 0;
+            itemsBody.querySelectorAll(".item-row").forEach(row => {
+                const qty = parseFloat(row.querySelector(".qty-input").value) || 0;
+                const rate = parseFloat(row.querySelector(".rate-input").value) || 0;
+                subtotal += (qty * rate);
+            });
+            const discount = parseFloat(discountInput.value) || 0;
+            const finalTotal = Math.max(0, subtotal - discount);
+            amountPaidInput.value = finalTotal.toFixed(2);
+            recalculate();
+        });
+    });
+</script>
+{% endblock %}

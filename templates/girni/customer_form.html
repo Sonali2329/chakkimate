@@ -1,0 +1,55 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-person-fill text-primary me-2"></i>
+                        {% if action == 'Create' %}{{ tr.customers }} - नवीन नोंदवा{% else %}{{ tr.edit }} - {{ customer.name }}{% endif %}
+                    </h5>
+                    <a href="{% url 'customer_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> {{ tr.cancel }}
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ tr.name }} (नाव)</label>
+                            <input type="text" name="name" class="form-control form-control-lg" value="{{ customer.name|default:'' }}" placeholder="उदा. सुरेश पाटील" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ tr.mobile }} (मोबाईल नंबर)</label>
+                            <input type="tel" name="mobile" class="form-control form-control-lg" value="{{ customer.mobile|default:'' }}" placeholder="उदा. 9822012345" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ tr.customer_type }}</label>
+                            <select name="customer_type" class="form-select">
+                                <option value="REGULAR" {% if customer.customer_type == 'REGULAR' %}selected{% endif %}>कायमचे (Regular)</option>
+                                <option value="WALKIN" {% if customer.customer_type == 'WALKIN' %}selected{% endif %}>किरकोळ (Walk-in)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ tr.address }} (पत्ता / गाव)</label>
+                            <textarea name="address" class="form-control" rows="2" placeholder="उदा. मु. पो. वडगाव, तालुका हातकणंगले">{{ customer.address|default:'' }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-brand btn-lg py-2">
+                                <i class="bi bi-check2-circle me-1"></i> {{ tr.save }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-pencil-square text-warning me-2"></i>{{ tr.adjust_stock }} (साठा दुरुस्ती)
+                    </h5>
+                    <a href="{% url 'stock_summary' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> {{ tr.cancel }}
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info py-2 small mb-4">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {% if current_lang == 'mr' %}
+                            साठा दुरुस्ती केल्यास त्याची संपूर्ण नोंद ऑडिट लेजरमध्ये सेव्ह केली जाते.
+                        {% else %}
+                            Stock adjustments are permanently recorded in the audit ledger.
+                        {% endif %}
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ tr.product_name }}</label>
+                            <select name="product_id" id="prodSelect" class="form-select form-select-lg" required>
+                                <option value="">-- निवडा / Select --</option>
+                                {% for p in products %}
+                                    <option value="{{ p.id }}" data-current="{{ p.current_stock }}">
+                                        {{ p.display_name }} (सध्या: {{ p.current_stock|floatformat:3 }} KG)
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                {% if current_lang == 'mr' %}सत्यापित नवीन साठा (Actual New Stock KG){% else %}New Actual Stock (KG){% endif %}
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <input type="number" step="0.001" min="0" name="new_stock_kg" id="newStockInput" class="form-control fw-bold" placeholder="0.000" required>
+                                <span class="input-group-text">KG</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                {% if current_lang == 'mr' %}दुरुस्तीचे कारण (Reason for Adjustment){% else %}Reason for Adjustment{% endif %}
+                            </label>
+                            <select name="reason" class="form-select" required>
+                                <option value="">-- कारण निवडा / Select Reason --</option>
+                                <option value="Physical Stock Verification">भौतिक साठा मोजणी (Physical Stock Verification)</option>
+                                <option value="Machine Cleaning & Spillage">मशिन स्वच्छता / सांडलेले धान्य (Spillage/Cleaning)</option>
+                                <option value="Moisture Loss / Drying">धान्यातील घट / ओलावा कमी होणे (Drying/Moisture Loss)</option>
+                                <option value="Damage / Weevil">किडणे / नुकसान (Damaged/Spoiled)</option>
+                                <option value="Initial Calibration">सुरुवातीची साठा नोंद (Initial Calibration)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ tr.notes }}</label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="अतिरिक्त तपशील..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning btn-lg fw-semibold">
+                                <i class="bi bi-check2-circle me-1"></i> {{ tr.confirm }} &amp; {{ tr.save }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

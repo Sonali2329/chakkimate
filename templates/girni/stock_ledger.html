@@ -1,0 +1,123 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-journal-text text-primary me-1"></i> {{ tr.stock_ledger }} (साठा नोंदवही)
+            </h4>
+            <span class="text-muted small">
+                {% if current_lang == 'mr' %}सर्व खरेदी, विक्री, उत्पादन आणि साठा हालचालींची ऑडिट नोंद{% else %}Auditable Stock In/Out Movement Ledger{% endif %}
+            </span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'stock_summary' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> {{ tr.stock_inventory }}
+            </a>
+            <a href="{% url 'stock_adjust' %}" class="btn btn-warning btn-sm">
+                <i class="bi bi-pencil-square me-1"></i> {{ tr.adjust_stock }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Form -->
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body p-3">
+            <form method="get" class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <label class="form-label small text-muted mb-1">{{ tr.product_name }}</label>
+                    <select name="product_id" class="form-select form-select-sm">
+                        <option value="">-- {% if current_lang == 'mr' %}सर्व उत्पादने{% else %}All Products{% endif %} --</option>
+                        {% for p in products %}
+                            <option value="{{ p.id }}" {% if selected_product == p.id|stringformat:"s" %}selected{% endif %}>
+                                {{ p.display_name }} ({{ p.get_product_type_display }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label small text-muted mb-1">{{ tr.movement_type }}</label>
+                    <select name="movement_type" class="form-select form-select-sm">
+                        <option value="">-- {% if current_lang == 'mr' %}सर्व हालचाली{% else %}All Movements{% endif %} --</option>
+                        <option value="PURCHASE" {% if selected_movement == 'PURCHASE' %}selected{% endif %}>खरेदी (Purchase In)</option>
+                        <option value="GRAIN_SALE" {% if selected_movement == 'GRAIN_SALE' %}selected{% endif %}>धान्य विक्री (Grain Sale Out)</option>
+                        <option value="FLOUR_SALE" {% if selected_movement == 'FLOUR_SALE' %}selected{% endif %}>पीठ विक्री (Flour Sale Out)</option>
+                        <option value="PRODUCTION_CONSUMED" {% if selected_movement == 'PRODUCTION_CONSUMED' %}selected{% endif %}>उत्पादनासाठी वापरलेले धान्य (Consumed Out)</option>
+                        <option value="PRODUCTION_PRODUCED" {% if selected_movement == 'PRODUCTION_PRODUCED' %}selected{% endif %}>तयार झालेले पीठ (Produced In)</option>
+                        <option value="ADJUSTMENT" {% if selected_movement == 'ADJUSTMENT' %}selected{% endif %}>साठा दुरुस्ती (Adjustment)</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-funnel me-1"></i> {{ tr.filter }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ledger Table -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small">
+                    <tr>
+                        <th>{{ tr.order_date }}</th>
+                        <th>{{ tr.product_name }}</th>
+                        <th>{{ tr.category }}</th>
+                        <th>{{ tr.movement_type }}</th>
+                        <th class="text-end">{{ tr.quantity_kg }}</th>
+                        <th class="text-end">{{ tr.balance_after }}</th>
+                        <th>{{ tr.reference }}</th>
+                        <th>{{ tr.notes }}</th>
+                    </tr>
+                </thead>
+                <tbody class="small">
+                    {% for m in movements %}
+                        <tr>
+                            <td>
+                                <div>{{ m.created_at|date:"d M Y" }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">{{ m.created_at|date:"h:i A" }}</div>
+                            </td>
+                            <td>
+                                <strong>{{ m.product.display_name }}</strong>
+                            </td>
+                            <td>
+                                {% if m.stock_type == 'RAW_GRAIN' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">कच्चे धान्य</span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success">तयार पीठ</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ m.get_movement_type_display }}</span>
+                            </td>
+                            <td class="text-end fw-bold fs-6 {% if m.quantity_kg > 0 %}text-success{% else %}text-danger{% endif %}">
+                                {% if m.quantity_kg > 0 %}+{% endif %}{{ m.quantity_kg|floatformat:3 }} KG
+                            </td>
+                            <td class="text-end fw-bold text-dark">
+                                {{ m.balance_after_kg|floatformat:3 }} KG
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ m.reference_id }}</span>
+                            </td>
+                            <td class="text-muted">
+                                {{ m.notes|default:"-" }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                {% if current_lang == 'mr' %}कोणत्याही साठ्याच्या नोंदी आढळल्या नाहीत.{% else %}No stock ledger records found.{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

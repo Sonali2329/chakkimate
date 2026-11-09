@@ -1,0 +1,73 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-cash-coin text-success me-1"></i> {{ tr.payments }} (जमा देयके / पावत्या)
+            </h4>
+            <span class="text-muted small">
+                ग्राहकांकडून मिळालेली रोख, UPI व बँक ट्रान्सफर पेमेंट्स
+            </span>
+        </div>
+        <div>
+            <a href="{% url 'invoice_list' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-receipt me-1"></i> बिलांमधून जमा करा
+            </a>
+        </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>पावती क्र.</th>
+                        <th>तारीख</th>
+                        <th>ग्राहक नाव</th>
+                        <th>संबंधित बिल क्र.</th>
+                        <th>पेमेंट पद्धत</th>
+                        <th>संदर्भ क्र. (UPI Ref)</th>
+                        <th class="text-end">जमा रक्कम (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in payments %}
+                        <tr>
+                            <td><span class="badge bg-secondary-subtle text-dark">PAY-{{ p.id }}</span></td>
+                            <td>{{ p.payment_date|date:"d M Y" }}</td>
+                            <td>
+                                <strong>{{ p.customer.name }}</strong>
+                                <div class="text-muted small">{{ p.customer.mobile }}</div>
+                            </td>
+                            <td>
+                                {% if p.invoice %}
+                                    <a href="{% url 'invoice_detail' p.invoice.id %}" class="text-decoration-none fw-semibold">
+                                        {{ p.invoice.invoice_number }}
+                                    </a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ p.get_payment_mode_display }}</span>
+                            </td>
+                            <td>{{ p.reference_number|default:"-" }}</td>
+                            <td class="text-end fw-bold text-success fs-6">
+                                ₹{{ p.amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">कोणतीही देयके आढळली नाहीत.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

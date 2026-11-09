@@ -1,0 +1,97 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-tag text-primary me-1"></i> {{ tr.products_grains }} (धान्य व पीठ मास्टर यादी)
+            </h4>
+            <span class="text-muted small">
+                {% if current_lang == 'mr' %}कच्चे धान्य, तयार पीठ, खरेदी व विक्री दर आणि दळण मजुरी दर व्यवस्थापन{% else %}Product & Grain Catalog, Rates, and Units{% endif %}
+            </span>
+        </div>
+        <div>
+            <a href="{% url 'product_create' %}" class="btn btn-brand">
+                <i class="bi bi-plus-circle me-1"></i> + {% if current_lang == 'mr' %}नवीन धान्य / उत्पादन नोंदवा{% else %}Add Product{% endif %}
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="card mb-3 shadow-sm border-0">
+        <div class="card-body py-2 px-3 d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted small fw-semibold me-2"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
+            <a href="{% url 'product_list' %}" class="btn btn-sm {% if not selected_type %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill">
+                {{ tr.all }}
+            </a>
+            <a href="{% url 'product_list' %}?type=RAW_GRAIN" class="btn btn-sm {% if selected_type == 'RAW_GRAIN' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill">
+                {{ tr.raw_grain }} (कच्चे धान्य)
+            </a>
+            <a href="{% url 'product_list' %}?type=FINISHED_FLOUR" class="btn btn-sm {% if selected_type == 'FINISHED_FLOUR' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill">
+                {{ tr.finished_flour }} (तयार पीठ)
+            </a>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ tr.product_name }}</th>
+                        <th>{{ tr.category }}</th>
+                        <th class="text-end">{{ tr.purchase_rate_kg }}</th>
+                        <th class="text-end">{{ tr.selling_rate_kg }}</th>
+                        <th class="text-end">{{ tr.grinding_rate }}</th>
+                        <th class="text-end">{{ tr.current_stock_kg }}</th>
+                        <th class="text-end">{{ tr.low_stock_limit }}</th>
+                        <th class="text-end">{{ tr.actions }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold fs-6">{{ p.display_name }}</div>
+                                <span class="badge bg-light text-muted border">Unit: {{ p.unit }}</span>
+                            </td>
+                            <td>
+                                {% if p.product_type == 'RAW_GRAIN' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">कच्चे धान्य</span>
+                                {% else %}
+                                    <span class="badge bg-success-subtle text-success">तयार पीठ</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">₹{{ p.purchase_rate|floatformat:2 }}</td>
+                            <td class="text-end fw-semibold text-primary">₹{{ p.selling_rate|floatformat:2 }}</td>
+                            <td class="text-end text-success fw-semibold">₹{{ p.grinding_rate|floatformat:2 }}</td>
+                            <td class="text-end fw-bold {% if p.is_low_stock %}text-danger{% else %}text-success{% endif %}">
+                                {{ p.current_stock|floatformat:3 }} KG
+                            </td>
+                            <td class="text-end text-muted">{{ p.low_stock_threshold|floatformat:3 }} KG</td>
+                            <td class="text-end">
+                                <a href="{% url 'stock_ledger' %}?product_id={{ p.id }}" class="btn btn-outline-secondary btn-sm" title="{{ tr.stock_ledger }}">
+                                    <i class="bi bi-journal-text"></i>
+                                </a>
+                                <a href="{% url 'product_edit' p.id %}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-pencil me-1"></i> {{ tr.edit }}
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-tag fs-2 d-block mb-2"></i>
+                                कोणतीही उत्पादने सापडली नाहीत.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

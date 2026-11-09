@@ -1,0 +1,325 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{ current_lang }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ shop_settings.shop_name }} | {{ tr.app_name }}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts for crisp English and Marathi typography (Noto Sans Devanagari) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --brand-primary: #1E3A8A; /* Deep Blue */
+            --brand-secondary: #D97706; /* Golden Wheat */
+            --brand-success: #059669; /* Emerald Green */
+            --brand-dark: #0F172A;
+            --brand-bg: #F8FAFC;
+        }
+        body {
+            font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--brand-bg);
+            color: #1E293B;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+        }
+        .brand-badge {
+            background-color: var(--brand-secondary);
+            color: #FFF;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 6px;
+        }
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 0.85rem !important;
+            border-radius: 6px;
+            transition: all 0.15s ease-in-out;
+        }
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #FFF !important;
+        }
+        .card {
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .card-header {
+            background-color: #FFF;
+            border-bottom: 1px solid #F1F5F9;
+            font-weight: 600;
+            border-top-left-radius: 12px !important;
+            border-top-right-radius: 12px !important;
+        }
+        .metric-card {
+            border-radius: 12px;
+            padding: 1.25rem;
+            color: #FFF;
+            position: relative;
+            overflow: hidden;
+        }
+        .metric-card .icon-watermark {
+            position: absolute;
+            right: -10px;
+            bottom: -15px;
+            font-size: 5rem;
+            opacity: 0.18;
+            line-height: 1;
+        }
+        .metric-card .metric-val {
+            font-size: 1.85rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .metric-card .metric-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+        }
+        .btn-brand {
+            background-color: var(--brand-primary);
+            color: #FFF;
+            border: none;
+            font-weight: 500;
+        }
+        .btn-brand:hover {
+            background-color: #172554;
+            color: #FFF;
+        }
+        .btn-wheat {
+            background-color: var(--brand-secondary);
+            color: #FFF;
+            border: none;
+            font-weight: 500;
+        }
+        .btn-wheat:hover {
+            background-color: #B45309;
+            color: #FFF;
+        }
+        .badge-pending {
+            background-color: #FEF3C7;
+            color: #92400E;
+            font-weight: 600;
+        }
+        .badge-progress {
+            background-color: #DBEAFE;
+            color: #1E40AF;
+            font-weight: 600;
+        }
+        .badge-completed {
+            background-color: #D1FAE5;
+            color: #065F46;
+            font-weight: 600;
+        }
+        .badge-delivered {
+            background-color: #E0E7FF;
+            color: #3730A3;
+            font-weight: 600;
+        }
+        .badge-cancelled {
+            background-color: #FEE2E2;
+            color: #991B1B;
+            font-weight: 600;
+        }
+        .table-responsive {
+            border-radius: 8px;
+        }
+        .lang-switch-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #FFF;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+        }
+        .lang-switch-btn:hover {
+            background-color: #FFF;
+            color: var(--brand-primary);
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #FFF;
+            }
+            .card {
+                border: none;
+                box-shadow: none;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <!-- Main Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top no-print" style="background-color: #1E3A8A !important;">
+        <div class="container-fluid px-3 px-lg-4">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'dashboard' %}">
+                <i class="bi bi-gear-wide-connected text-warning me-2 fs-4"></i>
+                <span>ChakkiMate</span>
+                <span class="brand-badge d-none d-sm-inline">{% if current_lang == 'mr' %}चक्कीमेट{% else %}Girni{% endif %}</span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#chakkimateNav" aria-controls="chakkimateNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="chakkimateNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'dashboard' %}">
+                            <i class="bi bi-speedometer2 me-1"></i> {{ tr.dashboard }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'grinding_order_list' %}">
+                            <i class="bi bi-fire me-1"></i> {{ tr.grinding_orders }}
+                            {% if pending_grinding_badge_count > 0 %}
+                                <span class="badge bg-warning text-dark ms-1">{{ pending_grinding_badge_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'sale_list' %}">
+                            <i class="bi bi-bag-check me-1"></i> {{ tr.grain_sales }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'production_list' %}">
+                            <i class="bi bi-funnel me-1"></i> {{ tr.production }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'stock_summary' %}">
+                            <i class="bi bi-boxes me-1"></i> {{ tr.stock_inventory }}
+                            {% if low_stock_badge_count > 0 %}
+                                <span class="badge bg-danger ms-1">{{ low_stock_badge_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'purchase_list' %}">
+                            <i class="bi bi-truck me-1"></i> {{ tr.purchases }}
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-people me-1"></i> {% if current_lang == 'mr' %}खाते व मास्टर{% else %}Accounts & Master{% endif %}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'customer_list' %}"><i class="bi bi-person me-2"></i>{{ tr.customers }}</a></li>
+                            <li><a class="dropdown-item" href="{% url 'supplier_list' %}"><i class="bi bi-building me-2"></i>{{ tr.suppliers }}</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'product_list' %}"><i class="bi bi-tag me-2"></i>{{ tr.products_grains }}</a></li>
+                            <li><a class="dropdown-item" href="{% url 'invoice_list' %}"><i class="bi bi-receipt me-2"></i>{% if current_lang == 'mr' %}सर्व बिले (Invoices){% else %}All Invoices{% endif %}</a></li>
+                            <li><a class="dropdown-item" href="{% url 'expense_list' %}"><i class="bi bi-cash-stack me-2"></i>{{ tr.expenses }}</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'reports' %}">
+                            <i class="bi bi-bar-chart-line me-1"></i> {{ tr.reports }}
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Language Toggle & Owner Menu -->
+                <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+                    <!-- One-click bilingual switch -->
+                    {% if current_lang == 'mr' %}
+                        <a href="{% url 'set_language' 'en' %}" class="lang-switch-btn" title="Switch to English">
+                            <i class="bi bi-translate"></i> English
+                        </a>
+                    {% else %}
+                        <a href="{% url 'set_language' 'mr' %}" class="lang-switch-btn" title="मराठी भाषेवर स्विच करा">
+                            <i class="bi bi-translate"></i> मराठी
+                        </a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light btn-sm dropdown-toggle rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle me-1"></i> {{ user.username }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li>
+                                    <h6 class="dropdown-header">{{ shop_settings.shop_name }}</h6>
+                                </li>
+                                <li><a class="dropdown-item" href="{% url 'shop_settings' %}"><i class="bi bi-sliders me-2"></i>{{ tr.settings }}</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form method="post" action="{% url 'girni_logout' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right me-2"></i>{{ tr.logout }}
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{% url 'girni_login' %}" class="btn btn-outline-light btn-sm rounded-pill">{{ tr.login }}</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Global Messages Container -->
+    <div class="container-fluid px-3 px-lg-4 mt-3 no-print">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi {% if message.tags == 'success' %}bi-check-circle-fill{% elif message.tags == 'error' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-top py-3 mt-4 no-print text-center text-muted small">
+        <div class="container-fluid px-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+            <div>
+                <strong>ChakkiMate (चक्कीमेट)</strong> &bull; {{ shop_settings.shop_name }} &bull; {{ shop_settings.mobile }}
+            </div>
+            <div>
+                {{ tr.girni_management }} &bull; Powered by Google Antigravity &bull; 2026
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

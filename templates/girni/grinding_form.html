@@ -1,0 +1,207 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-fire text-warning me-2"></i>{{ tr.new_order }} (दळण नोंदणी)
+                    </h5>
+                    <a href="{% url 'grinding_order_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> {{ tr.cancel }}
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" id="grindingForm">
+                        {% csrf_token %}
+
+                        <!-- Customer Selection & Quick Walk-in -->
+                        <div class="mb-4 p-3 bg-light rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label class="form-label fw-bold mb-0">
+                                    <i class="bi bi-person me-1"></i>{{ tr.customer }}
+                                </label>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" id="toggleWalkinBtn">
+                                    + {% if current_lang == 'mr' %}किरकोळ (Walk-in) ग्राहक त्वरित जोडा{% else %}Quick Walk-in Customer{% endif %}
+                                </button>
+                            </div>
+
+                            <div id="existingCustomerDiv">
+                                <select name="customer_id" id="customerSelect" class="form-select form-select-lg">
+                                    <option value="">-- {% if current_lang == 'mr' %}ग्राहक निवडा{% else %}Select Customer{% endif %} --</option>
+                                    {% for c in customers %}
+                                        <option value="{{ c.id }}">{{ c.name }} ({{ c.mobile }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div id="walkinCustomerDiv" class="row g-2 mt-2 d-none">
+                                <div class="col-md-6">
+                                    <input type="text" name="quick_customer_name" id="quickName" class="form-control" placeholder="{% if current_lang == 'mr' %}ग्राहकाचे नाव (उदा. रमेश पाटील){% else %}Customer Name{% endif %}">
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="tel" name="quick_customer_mobile" id="quickMobile" class="form-control" placeholder="{% if current_lang == 'mr' %}मोबाईल नंबर (१० अंकी){% else %}Mobile Number{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grain Selection & Ownership -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ tr.grain_type }}</label>
+                                <select name="grain_id" id="grainSelect" class="form-select form-select-lg" required>
+                                    <option value="">-- निवडा / Select --</option>
+                                    {% for g in raw_products %}
+                                        <option value="{{ g.id }}" data-rate="{{ g.grinding_rate }}">
+                                            {{ g.display_name }} (दर: ₹{{ g.grinding_rate }}/किलो)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">{{ tr.ownership }}</label>
+                                <select name="ownership_type" id="ownershipSelect" class="form-select form-select-lg">
+                                    <option value="CUSTOMER">{{ tr.customer_grain }} (साठा बदलणार नाही)</option>
+                                    <option value="MILL">{{ tr.mill_grain }} (गिरणीचा साठा कमी होईल)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Weight & Rate & Total Calculation -->
+                        <div class="row g-3 mb-4 p-3 bg-warning-subtle rounded-3 border border-warning">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ tr.input_weight }}</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" step="0.001" min="0.1" name="input_kg" id="inputKg" class="form-control fw-bold" placeholder="0.000" required>
+                                    <span class="input-group-text">KG</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ tr.grinding_rate }}</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text">₹</span>
+                                    <input type="number" step="0.01" min="0" name="rate_per_kg" id="ratePerKg" class="form-control fw-bold" placeholder="5.00">
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold text-dark">{{ tr.charges }}</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-white fw-bold">₹</span>
+                                    <input type="text" id="calculatedCharges" class="form-control form-control-lg bg-white fw-bold text-primary fs-4" readonly value="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delivery and Payment Option -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-clock me-1"></i>{{ tr.expected_delivery }}
+                                </label>
+                                <input type="datetime-local" name="expected_delivery" class="form-control" value="{{ default_expected_delivery }}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="border rounded p-3 h-100 bg-white">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" name="is_paid" id="isPaidSwitch">
+                                        <label class="form-check-label fw-semibold" for="isPaidSwitch">
+                                            {% if current_lang == 'mr' %}मजुरी रक्कम लगेच जमा झाली आहे (Advance Paid){% else %}Mark charges as Paid immediately{% endif %}
+                                        </label>
+                                    </div>
+                                    <div id="paymentModeDiv" class="d-none mt-2">
+                                        <label class="form-label small text-muted">{{ tr.payment_mode }}</label>
+                                        <select name="payment_mode" class="form-select form-select-sm">
+                                            <option value="CASH">{{ tr.cash }}</option>
+                                            <option value="UPI">{{ tr.upi }}</option>
+                                            <option value="BANK_TRANSFER">{{ tr.bank_transfer }}</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ tr.notes }}</label>
+                            <input type="text" name="notes" class="form-control" placeholder="{% if current_lang == 'mr' %}काही सूचना किंवा टीप... (उदा. बारीक दळणे / जाड दळणे){% else %}Special instructions (e.g. Fine flour, Coarse)...{% endif %}">
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'grinding_order_list' %}" class="btn btn-light px-4">{{ tr.cancel }}</a>
+                            <button type="submit" class="btn btn-wheat btn-lg px-5">
+                                <i class="bi bi-check2-circle me-1"></i> {{ tr.save }} &amp; {% if current_lang == 'mr' %}पावती तयार करा{% else %}Generate Token{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const grainSelect = document.getElementById("grainSelect");
+        const ratePerKg = document.getElementById("ratePerKg");
+        const inputKg = document.getElementById("inputKg");
+        const calculatedCharges = document.getElementById("calculatedCharges");
+        const isPaidSwitch = document.getElementById("isPaidSwitch");
+        const paymentModeDiv = document.getElementById("paymentModeDiv");
+        const toggleWalkinBtn = document.getElementById("toggleWalkinBtn");
+        const customerSelect = document.getElementById("customerSelect");
+        const walkinDiv = document.getElementById("walkinCustomerDiv");
+
+        // Auto rate update on grain selection
+        grainSelect.addEventListener("change", function() {
+            const opt = grainSelect.options[grainSelect.selectedIndex];
+            const defaultRate = opt.getAttribute("data-rate");
+            if (defaultRate) {
+                ratePerKg.value = parseFloat(defaultRate).toFixed(2);
+            }
+            recalc();
+        });
+
+        function recalc() {
+            const kg = parseFloat(inputKg.value) || 0;
+            const rate = parseFloat(ratePerKg.value) || 0;
+            const tot = (kg * rate).toFixed(2);
+            calculatedCharges.value = tot;
+        }
+
+        inputKg.addEventListener("input", recalc);
+        ratePerKg.addEventListener("input", recalc);
+
+        // Toggle payment mode dropdown
+        isPaidSwitch.addEventListener("change", function() {
+            if (isPaidSwitch.checked) {
+                paymentModeDiv.classList.remove("d-none");
+            } else {
+                paymentModeDiv.classList.add("d-none");
+            }
+        });
+
+        // Toggle Walkin Customer
+        let isWalkin = false;
+        toggleWalkinBtn.addEventListener("click", function() {
+            isWalkin = !isWalkin;
+            if (isWalkin) {
+                walkinDiv.classList.remove("d-none");
+                customerSelect.value = "";
+                customerSelect.disabled = true;
+                toggleWalkinBtn.textContent = "{% if current_lang == 'mr' %}&larr; अस्तित्वात असलेला ग्राहक निवडा{% else %}&larr; Select Existing Customer{% endif %}";
+            } else {
+                walkinDiv.classList.add("d-none");
+                customerSelect.disabled = false;
+                toggleWalkinBtn.textContent = "+ {% if current_lang == 'mr' %}किरकोळ (Walk-in) ग्राहक त्वरित जोडा{% else %}Quick Walk-in Customer{% endif %}";
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-building text-primary me-2"></i>
+                        {% if action == 'Create' %}नवीन पुरवठादार नोंदवा{% else %}बदल करा{% endif %}
+                    </h5>
+                    <a href="{% url 'supplier_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> {{ tr.cancel }}
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ tr.name }} (पुरवठादाराचे किंवा व्यापार्याचे नाव)</label>
+                            <input type="text" name="name" class="form-control form-control-lg" placeholder="उदा. विशाल ग्रेन मर्चंट्स" required autofocus>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ tr.mobile }} (मोबाईल नंबर)</label>
+                            <input type="tel" name="mobile" class="form-control form-control-lg" placeholder="उदा. 9822123456" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ tr.address }} (पत्ता / मार्केट यार्ड)</label>
+                            <textarea name="address" class="form-control" rows="2" placeholder="उदा. शॉप नं. ४२, कृषी उत्पन्न बाजार समिती"></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ tr.notes }} (टीप / बँक खाते तपशील)</label>
+                            <textarea name="notes" class="form-control" rows="2" placeholder="उदा. बँक नाव, IFSC, खाते क्रमांक..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-brand btn-lg py-2">
+                                <i class="bi bi-check2-circle me-1"></i> {{ tr.save }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

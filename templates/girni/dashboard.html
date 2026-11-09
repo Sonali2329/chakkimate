@@ -1,0 +1,365 @@
+{% extends 'girni/base.html' %}
+
+{% block extra_head %}
+<!-- Chart.js for interactive analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+
+    <!-- Top Action Bar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                {% if current_lang == 'mr' %}
+                    🌾 {{ shop_settings.shop_name_mr|default:shop_settings.shop_name }} - डॅशबोर्ड
+                {% else %}
+                    🌾 {{ shop_settings.shop_name }} - Dashboard
+                {% endif %}
+            </h4>
+            <span class="text-muted small">
+                <i class="bi bi-calendar3 me-1"></i> {{ today|date:"D, d M Y" }} &bull; {{ shop_settings.owner_name }}
+            </span>
+        </div>
+        
+        <!-- Fast Action Shortcuts -->
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'grinding_order_create' %}" class="btn btn-wheat shadow-sm">
+                <i class="bi bi-fire me-1"></i> + {{ tr.new_order }}
+            </a>
+            <a href="{% url 'sale_create' %}" class="btn btn-brand shadow-sm">
+                <i class="bi bi-bag-plus me-1"></i> + {{ tr.new_sale }}
+            </a>
+            <a href="{% url 'production_create' %}" class="btn btn-outline-primary shadow-sm bg-white">
+                <i class="bi bi-funnel me-1"></i> + {{ tr.new_batch }}
+            </a>
+            <a href="{% url 'purchase_create' %}" class="btn btn-outline-secondary shadow-sm bg-white">
+                <i class="bi bi-truck me-1"></i> + {{ tr.new_purchase }}
+            </a>
+        </div>
+    </div>
+
+    <!-- 6 Primary Business Metric Cards (SRS Section 4.2) -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Today's Grinding Orders & Charges -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="metric-card shadow-sm" style="background: linear-gradient(135deg, #D97706, #B45309);">
+                <i class="bi bi-fire icon-watermark"></i>
+                <div class="metric-label">{{ tr.today_grinding }}</div>
+                <div class="metric-val mt-1">{{ today_grinding_count }} <span class="fs-6 fw-normal">{% if current_lang == 'mr' %}ऑर्डर्स{% else %}jobs{% endif %}</span></div>
+                <div class="small mt-1 opacity-90">
+                    {{ tr.today_grinding_charges }}: <strong>₹{{ today_grinding_charges|floatformat:2 }}</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Today's Grain & Flour Sales -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="metric-card shadow-sm" style="background: linear-gradient(135deg, #1E3A8A, #1E40AF);">
+                <i class="bi bi-bag-check icon-watermark"></i>
+                <div class="metric-label">{{ tr.today_sales }}</div>
+                <div class="metric-val mt-1">₹{{ today_sales_total|floatformat:2 }}</div>
+                <div class="small mt-1 opacity-90">
+                    <a href="{% url 'sale_list' %}" class="text-white text-decoration-none">
+                        {% if current_lang == 'mr' %}विक्री पहा &rarr;{% else %}View sales &rarr;{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Today's Collections (Cash / UPI / Bank) -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="metric-card shadow-sm" style="background: linear-gradient(135deg, #059669, #047857);">
+                <i class="bi bi-cash-coin icon-watermark"></i>
+                <div class="metric-label">{{ tr.today_collections }}</div>
+                <div class="metric-val mt-1">₹{{ today_payments_total|floatformat:2 }}</div>
+                <div class="small mt-1 opacity-90">
+                    {% if current_lang == 'mr' %}एकूण जमा रक्कम{% else %}Total received{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Today's Expenses -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="metric-card shadow-sm" style="background: linear-gradient(135deg, #DC2626, #B91C1C);">
+                <i class="bi bi-receipt-cutoff icon-watermark"></i>
+                <div class="metric-label">{{ tr.today_expenses }}</div>
+                <div class="metric-val mt-1">₹{{ today_expenses_total|floatformat:2 }}</div>
+                <div class="small mt-1 opacity-90">
+                    <a href="{% url 'expense_create' %}" class="text-white text-decoration-none">
+                        + {% if current_lang == 'mr' %}खर्च जोडा{% else %}Add expense{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Pending Grinding Jobs -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="metric-card shadow-sm" style="background: linear-gradient(135deg, #6366F1, #4F46E5);">
+                <i class="bi bi-hourglass-split icon-watermark"></i>
+                <div class="metric-label">{{ tr.pending_grinding_orders }}</div>
+                <div class="metric-val mt-1">{{ pending_orders_count }}</div>
+                <div class="small mt-1 opacity-90">
+                    <a href="{% url 'grinding_order_list' %}?status=PENDING" class="text-white text-decoration-none">
+                        {% if current_lang == 'mr' %}दळणे बाकी &rarr;{% else %}Needs processing &rarr;{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Total Outstanding Dues -->
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="metric-card shadow-sm" style="background: linear-gradient(135deg, #7C3AED, #6D28D9);">
+                <i class="bi bi-wallet2 icon-watermark"></i>
+                <div class="metric-label">{{ tr.total_outstanding }}</div>
+                <div class="metric-val mt-1">₹{{ total_outstanding|floatformat:2 }}</div>
+                <div class="small mt-1 opacity-90">
+                    <a href="{% url 'invoice_list' %}?status=UNPAID" class="text-white text-decoration-none">
+                        {% if current_lang == 'mr' %}बाकी खाती &rarr;{% else %}View dues &rarr;{% endif %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Summary Cards & Low-Stock Alerts -->
+    <div class="row g-3 mb-4">
+        <!-- Stock Summaries -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="text-dark"><i class="bi bi-boxes me-2 text-primary"></i>{{ tr.stock_inventory }}</span>
+                    <a href="{% url 'stock_summary' %}" class="small text-decoration-none">{% if current_lang == 'mr' %}सर्व साठा पहा &rarr;{% else %}Full Inventory &rarr;{% endif %}</a>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-6 border-end">
+                            <div class="text-muted small">{{ tr.raw_grain_stock }}</div>
+                            <div class="fs-3 fw-bold text-primary">{{ raw_stock_total|floatformat:3 }} <span class="fs-6 text-muted">KG</span></div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted small">{{ tr.finished_flour_stock }}</div>
+                            <div class="fs-3 fw-bold text-success">{{ flour_stock_total|floatformat:3 }} <span class="fs-6 text-muted">KG</span></div>
+                        </div>
+                    </div>
+                    
+                    {% if low_stock_items %}
+                        <div class="alert alert-warning py-2 px-3 mb-0 small border-0 bg-warning-subtle text-dark">
+                            <strong><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>{{ tr.low_stock_alerts }}:</strong>
+                            {% for p in low_stock_items|slice:":4" %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle me-1">
+                                    {{ p.display_name }}: {{ p.current_stock|floatformat:1 }} KG
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success py-2 px-3 mb-0 small border-0 bg-success-subtle text-success">
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            {% if current_lang == 'mr' %}सर्व धान्याचा साठा पुरेसा आहे.{% else %}All grain and flour stocks are healthy.{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Weekly Performance Chart -->
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="text-dark"><i class="bi bi-graph-up me-2 text-primary"></i>{{ tr.weekly_overview }}</span>
+                    <span class="badge bg-light text-muted border">Last 7 Days</span>
+                </div>
+                <div class="card-body p-2">
+                    <canvas id="weeklyChart" height="135"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Grinding Orders & Recent Sales -->
+    <div class="row g-3">
+        <!-- Active / Pending Grinding Jobs -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="bi bi-fire me-2 text-warning"></i>
+                        {{ tr.pending_grinding_orders }} ({{ pending_orders_count }})
+                    </span>
+                    <a href="{% url 'grinding_order_create' %}" class="btn btn-wheat btn-sm">
+                        <i class="bi bi-plus"></i> {{ tr.new_order }}
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>{{ tr.token_number }}</th>
+                                <th>{{ tr.customer }}</th>
+                                <th>{{ tr.grain_type }}</th>
+                                <th>{{ tr.input_weight }}</th>
+                                <th>{{ tr.charges }}</th>
+                                <th>{{ tr.status }}</th>
+                                <th class="text-end">{{ tr.actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            {% for ord in pending_orders %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-dark-subtle text-dark border">{{ ord.token_number|default:ord.order_number }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ ord.customer.name }}</div>
+                                        <div class="text-muted" style="font-size: 0.75rem;">{{ ord.customer.mobile }}</div>
+                                    </td>
+                                    <td>
+                                        {{ ord.grain.display_name }}
+                                        {% if ord.ownership_type == 'CUSTOMER' %}
+                                            <span class="badge bg-light text-muted border">ग्राहक</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="fw-bold">{{ ord.input_kg|floatformat:3 }} KG</td>
+                                    <td class="text-primary fw-bold">₹{{ ord.charges|floatformat:2 }}</td>
+                                    <td>
+                                        {% if ord.status == 'PENDING' %}
+                                            <span class="badge badge-pending">{{ ord.get_status_display }}</span>
+                                        {% elif ord.status == 'IN_PROGRESS' %}
+                                            <span class="badge badge-progress">{{ ord.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-outline-secondary" title="{{ tr.view }}">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            {% if ord.status == 'PENDING' %}
+                                                <form method="post" action="{% url 'grinding_order_status' ord.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="status" value="IN_PROGRESS">
+                                                    <button type="submit" class="btn btn-outline-primary" title="Start Grinding">
+                                                        <i class="bi bi-play-fill"></i>
+                                                    </button>
+                                                </form>
+                                            {% elif ord.status == 'IN_PROGRESS' %}
+                                                <form method="post" action="{% url 'grinding_order_status' ord.id %}" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="status" value="COMPLETED">
+                                                    <button type="submit" class="btn btn-outline-success" title="Mark Completed">
+                                                        <i class="bi bi-check-lg"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center py-4 text-muted">
+                                        <i class="bi bi-check2-circle fs-3 text-success d-block mb-1"></i>
+                                        {% if current_lang == 'mr' %}कोणतेही प्रलंबित दळण काम नाही! सर्व पूर्ण झाले आहेत.{% else %}No pending grinding orders! All jobs completed.{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Sales & Invoices -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="bi bi-bag-check me-2 text-primary"></i>
+                        {{ tr.recent_sales }}
+                    </span>
+                    <a href="{% url 'sale_create' %}" class="btn btn-brand btn-sm">
+                        <i class="bi bi-plus"></i> {{ tr.new_sale }}
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light small">
+                            <tr>
+                                <th>{{ tr.sale_number }}</th>
+                                <th>{{ tr.customer }}</th>
+                                <th>{{ tr.total_amount }}</th>
+                                <th class="text-end">{{ tr.actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody class="small">
+                            {% for s in recent_sales %}
+                                <tr>
+                                    <td>
+                                        <span class="fw-semibold">{{ s.sale_number }}</span>
+                                        <div class="text-muted" style="font-size: 0.75rem;">{{ s.sale_date|date:"d M" }}</div>
+                                    </td>
+                                    <td>{{ s.customer.name }}</td>
+                                    <td class="fw-bold text-success">₹{{ s.total|floatformat:2 }}</td>
+                                    <td class="text-end">
+                                        {% if s.invoice %}
+                                            <a href="{% url 'invoice_detail' s.invoice.id %}" class="btn btn-outline-primary btn-sm py-0 px-2" title="{{ tr.view }}">
+                                                <i class="bi bi-receipt"></i>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">
+                                        {% if current_lang == 'mr' %}अद्याप कोणतीही विक्री झालेली नाही.{% else %}No recent sales recorded.{% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const ctx = document.getElementById('weeklyChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: {{ weekly_labels|safe }},
+                    datasets: [
+                        {
+                            label: '{% if current_lang == "mr" %}धान्य व पीठ विक्री (₹){% else %}Grain & Flour Sales (₹){% endif %}',
+                            data: {{ weekly_sales_data|safe }},
+                            backgroundColor: '#1E3A8A',
+                            borderRadius: 6
+                        },
+                        {
+                            label: '{% if current_lang == "mr" %}दळण मजुरी (₹){% else %}Grinding Charges (₹){% endif %}',
+                            data: {{ weekly_grinding_data|safe }},
+                            backgroundColor: '#D97706',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12 } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#F1F5F9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+    <!-- Action Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="{% url 'customer_list' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> {{ tr.customers }}
+        </a>
+        <div class="d-flex gap-2">
+            <a href="{% url 'grinding_order_create' %}?customer_id={{ customer.id }}" class="btn btn-wheat btn-sm">
+                <i class="bi bi-fire me-1"></i> + {{ tr.new_order }}
+            </a>
+            <a href="{% url 'sale_create' %}?customer_id={{ customer.id }}" class="btn btn-brand btn-sm">
+                <i class="bi bi-bag-plus me-1"></i> + {{ tr.new_sale }}
+            </a>
+            <a href="{% url 'customer_edit' customer.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i> {{ tr.edit }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Customer Profile Header Card -->
+    <div class="card shadow-sm border-0 mb-4 p-4 bg-white">
+        <div class="row align-items-center">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                        <i class="bi bi-person-fill fs-2"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-1 text-dark">{{ customer.name }}</h4>
+                        <div class="text-muted small">
+                            <i class="bi bi-telephone me-1"></i>{{ customer.mobile }} &bull; 
+                            <span class="badge bg-light text-dark border">{{ customer.get_customer_type_display }}</span>
+                        </div>
+                        {% if customer.address %}
+                            <div class="text-muted small mt-1"><i class="bi bi-geo-alt me-1"></i>{{ customer.address }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5 text-md-end mt-3 mt-md-0">
+                <div class="border rounded p-3 bg-light d-inline-block text-start" style="min-width: 220px;">
+                    <span class="text-muted small text-uppercase fw-semibold">{{ tr.total_outstanding }} (येणे बाकी):</span>
+                    <div class="fs-3 fw-bold {% if customer.total_outstanding > 0 %}text-danger{% else %}text-success{% endif %}">
+                        ₹{{ customer.total_outstanding|floatformat:2 }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Tabs -->
+    <ul class="nav nav-tabs mb-3" id="customerTab" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active fw-semibold" id="grinding-tab" data-bs-toggle="tab" data-bs-target="#grinding" type="button">
+                <i class="bi bi-fire me-1 text-warning"></i> {{ tr.grinding_orders }} ({{ grinding_orders.count }})
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button">
+                <i class="bi bi-bag-check me-1 text-primary"></i> {{ tr.grain_sales }} ({{ sales.count }})
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link fw-semibold" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" type="button">
+                <i class="bi bi-receipt me-1 text-success"></i> सर्व बिले व बाकी ({{ invoices.count }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="customerTabContent">
+        <!-- Grinding Orders Tab -->
+        <div class="tab-pane fade show active" id="grinding">
+            <div class="card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ tr.token_number }}</th>
+                                <th>{{ tr.order_date }}</th>
+                                <th>{{ tr.grain_type }}</th>
+                                <th class="text-end">{{ tr.input_weight }}</th>
+                                <th class="text-end">{{ tr.charges }}</th>
+                                <th>{{ tr.status }}</th>
+                                <th class="text-end">{{ tr.actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ord in grinding_orders %}
+                                <tr>
+                                    <td><span class="badge bg-secondary-subtle text-dark">{{ ord.token_number|default:ord.order_number }}</span></td>
+                                    <td>{{ ord.order_date|date:"d M Y, h:i A" }}</td>
+                                    <td class="fw-semibold">{{ ord.grain.display_name }}</td>
+                                    <td class="text-end fw-bold">{{ ord.input_kg|floatformat:3 }} KG</td>
+                                    <td class="text-end fw-bold text-primary">₹{{ ord.charges|floatformat:2 }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ ord.get_status_display }}</span></td>
+                                    <td class="text-end">
+                                        <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-outline-primary btn-sm py-0">
+                                            {{ tr.view }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="7" class="text-center py-4 text-muted">कोणत्याही दळण नोंदी नाहीत.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Tab -->
+        <div class="tab-pane fade" id="sales">
+            <div class="card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ tr.sale_number }}</th>
+                                <th>{{ tr.order_date }}</th>
+                                <th class="text-end">{{ tr.total_amount }}</th>
+                                <th>{{ tr.status }}</th>
+                                <th class="text-end">{{ tr.actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in sales %}
+                                <tr>
+                                    <td><span class="fw-bold">{{ s.sale_number }}</span></td>
+                                    <td>{{ s.sale_date|date:"d M Y" }}</td>
+                                    <td class="text-end fw-bold text-success">₹{{ s.total|floatformat:2 }}</td>
+                                    <td><span class="badge bg-success-subtle text-success">{{ s.get_status_display }}</span></td>
+                                    <td class="text-end">
+                                        {% if s.invoice %}
+                                            <a href="{% url 'invoice_detail' s.invoice.id %}" class="btn btn-outline-primary btn-sm py-0">
+                                                {{ tr.view }}
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="5" class="text-center py-4 text-muted">कोणत्याही विक्री नोंदी नाहीत.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoices Tab -->
+        <div class="tab-pane fade" id="invoices">
+            <div class="card shadow-sm border-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 small">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ tr.invoice_number }}</th>
+                                <th>{{ tr.order_date }}</th>
+                                <th class="text-end">{{ tr.total_amount }}</th>
+                                <th class="text-end">{{ tr.amount_paid }}</th>
+                                <th class="text-end">{{ tr.balance_due }}</th>
+                                <th>{{ tr.status }}</th>
+                                <th class="text-end">{{ tr.actions }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inv in invoices %}
+                                <tr>
+                                    <td><span class="fw-bold">{{ inv.invoice_number }}</span></td>
+                                    <td>{{ inv.invoice_date|date:"d M Y" }}</td>
+                                    <td class="text-end fw-bold">₹{{ inv.total|floatformat:2 }}</td>
+                                    <td class="text-end text-success">₹{{ inv.amount_paid|floatformat:2 }}</td>
+                                    <td class="text-end fw-bold {% if inv.balance_due > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                        ₹{{ inv.balance_due|floatformat:2 }}
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ inv.get_status_display }}</span></td>
+                                    <td class="text-end">
+                                        <a href="{% url 'invoice_detail' inv.id %}" class="btn btn-outline-primary btn-sm py-0">
+                                            {{ tr.view }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="7" class="text-center py-4 text-muted">कोणतीही बिले नाहीत.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

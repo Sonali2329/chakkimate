@@ -1,0 +1,155 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-funnel text-primary me-2"></i>{{ tr.new_batch }} (स्वतःचे पीठ उत्पादन बॅच)
+                    </h5>
+                    <a href="{% url 'production_list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> {{ tr.cancel }}
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <div class="alert alert-info py-2 small mb-4">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {% if current_lang == 'mr' %}
+                            ही बॅच सेव्ह केल्यास वापरलेल्या कच्च्या धान्याचा साठा आपोआप कमी होईल आणि तयार झालेल्या पिठाचा साठा वाढेल.
+                        {% else %}
+                            Confirming this batch will automatically deduct raw grain stock and increment finished flour stock.
+                        {% endif %}
+                    </div>
+
+                    <form method="post" id="productionForm">
+                        {% csrf_token %}
+
+                        <!-- Product Selection -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-danger">
+                                    <i class="bi bi-box-arrow-down me-1"></i>{{ tr.raw_grain_consumed }} (Input)
+                                </label>
+                                <select name="raw_product_id" id="rawProdSelect" class="form-select form-select-lg" required>
+                                    <option value="">-- कच्चे धान्य निवडा --</option>
+                                    {% for r in raw_products %}
+                                        <option value="{{ r.id }}">
+                                            {{ r.display_name }} (साठा: {{ r.current_stock|floatformat:1 }} KG)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold text-success">
+                                    <i class="bi bi-box-arrow-up me-1"></i>{{ tr.flour_produced }} (Output)
+                                </label>
+                                <select name="flour_product_id" id="flourProdSelect" class="form-select form-select-lg" required>
+                                    <option value="">-- तयार पीठ निवडा --</option>
+                                    {% for f in flour_products %}
+                                        <option value="{{ f.id }}">
+                                            {{ f.display_name }} (सध्या: {{ f.current_stock|floatformat:1 }} KG)
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Weights & Yield Calculation -->
+                        <div class="row g-3 mb-4 p-3 bg-light rounded-3 border">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ tr.input_weight }}</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" step="0.001" min="0.1" name="input_kg" id="inputKg" class="form-control fw-bold" placeholder="50.000" required>
+                                    <span class="input-group-text">KG</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ tr.output_weight }}</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" step="0.001" min="0.1" name="output_kg" id="outputKg" class="form-control fw-bold" placeholder="42.000" required>
+                                    <span class="input-group-text">KG</span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ tr.wastage_weight }}</label>
+                                <div class="input-group input-group-lg">
+                                    <input type="number" step="0.001" min="0" name="wastage_kg" id="wastageKg" class="form-control fw-bold text-muted" placeholder="8.000">
+                                    <span class="input-group-text">KG</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Real-time Yield Display -->
+                        <div class="p-3 mb-4 rounded-3 border text-center bg-white">
+                            <span class="text-muted small text-uppercase fw-semibold">{{ tr.yield_percentage }} (उत्पादन प्रमाण)</span>
+                            <div class="fs-2 fw-bold text-success mt-1" id="yieldDisplay">0.00%</div>
+                            <div class="small text-muted" id="yieldNote">वजन टाकल्यावर यील्ड प्रमाण दिसेल.</div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ tr.processing_date }}</label>
+                                <input type="date" name="batch_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ tr.notes }}</label>
+                                <input type="text" name="notes" class="form-control" placeholder="उदा. मशिन नं. २, चाळणी क्र. ४">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'production_list' %}" class="btn btn-light px-4">{{ tr.cancel }}</a>
+                            <button type="submit" class="btn btn-brand btn-lg px-5">
+                                <i class="bi bi-check2-circle me-1"></i> {{ tr.record_batch }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputKg = document.getElementById("inputKg");
+        const outputKg = document.getElementById("outputKg");
+        const wastageKg = document.getElementById("wastageKg");
+        const yieldDisplay = document.getElementById("yieldDisplay");
+        const yieldNote = document.getElementById("yieldNote");
+
+        function calculateYield() {
+            const inp = parseFloat(inputKg.value) || 0;
+            const out = parseFloat(outputKg.value) || 0;
+
+            if (inp > 0) {
+                const waste = Math.max(0, inp - out);
+                wastageKg.value = waste.toFixed(3);
+
+                const yieldPct = ((out / inp) * 100).toFixed(2);
+                yieldDisplay.textContent = yieldPct + "%";
+                if (yieldPct >= 80) {
+                    yieldDisplay.className = "fs-2 fw-bold text-success mt-1";
+                    yieldNote.textContent = "उत्कृष्ट उत्पादन प्रमाण (High Yield)";
+                } else {
+                    yieldDisplay.className = "fs-2 fw-bold text-warning mt-1";
+                    yieldNote.textContent = "सर्वसाधारण उत्पादन प्रमाण (Normal Yield)";
+                }
+            } else {
+                yieldDisplay.textContent = "0.00%";
+                wastageKg.value = "0.000";
+            }
+        }
+
+        inputKg.addEventListener("input", calculateYield);
+        outputKg.addEventListener("input", calculateYield);
+    });
+</script>
+{% endblock %}

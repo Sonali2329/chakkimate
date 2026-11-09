@@ -1,0 +1,112 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-receipt text-primary me-1"></i> {% if current_lang == 'mr' %}सर्व बिले (Invoices){% else %}Invoices & Billing{% endif %}
+            </h4>
+            <span class="text-muted small">
+                {% if current_lang == 'mr' %}दळण व विक्री बिलांची संपूर्ण यादी व बाकी हिशोब{% else %}Sales & Grinding Invoices Ledger{% endif %}
+            </span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'sale_create' %}" class="btn btn-brand btn-sm">
+                <i class="bi bi-bag-plus me-1"></i> + {{ tr.new_sale }}
+            </a>
+            <a href="{% url 'grinding_order_create' %}" class="btn btn-wheat btn-sm">
+                <i class="bi bi-fire me-1"></i> + {{ tr.new_order }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="card mb-3 shadow-sm border-0">
+        <div class="card-body py-2 px-3 d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted small fw-semibold me-2"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
+            <a href="{% url 'invoice_list' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill">
+                {{ tr.all }}
+            </a>
+            <a href="{% url 'invoice_list' %}?status=PAID" class="btn btn-sm {% if status_filter == 'PAID' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill">
+                {{ tr.payment_paid }}
+            </a>
+            <a href="{% url 'invoice_list' %}?status=PARTIAL" class="btn btn-sm {% if status_filter == 'PARTIAL' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill">
+                {{ tr.payment_partial }}
+            </a>
+            <a href="{% url 'invoice_list' %}?status=UNPAID" class="btn btn-sm {% if status_filter == 'UNPAID' %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill">
+                {{ tr.payment_unpaid }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ tr.invoice_number }}</th>
+                        <th>{{ tr.invoice_date }}</th>
+                        <th>{{ tr.customer }}</th>
+                        <th>{{ tr.category }}</th>
+                        <th class="text-end">{{ tr.total_amount }}</th>
+                        <th class="text-end">{{ tr.amount_paid }}</th>
+                        <th class="text-end">{{ tr.balance_due }}</th>
+                        <th>{{ tr.status }}</th>
+                        <th class="text-end">{{ tr.actions }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-dark">{{ inv.invoice_number }}</span>
+                            </td>
+                            <td>{{ inv.invoice_date|date:"d M Y" }}</td>
+                            <td>
+                                <div class="fw-semibold">{{ inv.customer.name }}</div>
+                                <div class="text-muted small">{{ inv.customer.mobile }}</div>
+                            </td>
+                            <td>
+                                {% if inv.invoice_type == 'SALE' %}
+                                    <span class="badge bg-primary-subtle text-primary border">विक्री / Sale</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border">दळण / Grinding</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end fw-bold">₹{{ inv.total|floatformat:2 }}</td>
+                            <td class="text-end text-success">₹{{ inv.amount_paid|floatformat:2 }}</td>
+                            <td class="text-end fw-bold {% if inv.balance_due > 0 %}text-danger{% else %}text-muted{% endif %}">
+                                ₹{{ inv.balance_due|floatformat:2 }}
+                            </td>
+                            <td>
+                                {% if inv.status == 'PAID' %}
+                                    <span class="badge bg-success">{{ tr.payment_paid }}</span>
+                                {% elif inv.status == 'PARTIAL' %}
+                                    <span class="badge bg-warning text-dark">{{ tr.payment_partial }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ tr.payment_unpaid }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'invoice_detail' inv.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i> {{ tr.view }}
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="bi bi-receipt-cutoff fs-2 d-block mb-2"></i>
+                                {% if current_lang == 'mr' %}कोणतीही बिले आढळली नाहीत.{% else %}No invoices found.{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

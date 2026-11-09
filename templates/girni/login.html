@@ -1,0 +1,61 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 70px; height: 70px;">
+                            <i class="bi bi-gear-wide-connected fs-1"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark">ChakkiMate (चक्कीमेट)</h3>
+                        <p class="text-muted small">
+                            {% if current_lang == 'mr' %}
+                                गिरणी व्यवस्थापन प्रणाली - मालक लॉगिन
+                            {% else %}
+                                Flour Mill Management System - Owner Login
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-person me-1"></i>
+                                {% if current_lang == 'mr' %}वापरकर्ता नाव (Username){% else %}Username{% endif %}
+                            </label>
+                            <input type="text" name="username" class="form-control form-control-lg" placeholder="owner" required autofocus>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-key me-1"></i>
+                                {% if current_lang == 'mr' %}पासवर्ड (Password){% else %}Password{% endif %}
+                            </label>
+                            <input type="password" name="password" class="form-control form-control-lg" placeholder="••••••••" required>
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-brand btn-lg py-2">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>{{ tr.login }}
+                            </button>
+                        </div>
+
+                        <div class="alert alert-info py-2 px-3 small border-0 bg-light text-muted text-center mb-0">
+                            <i class="bi bi-shield-check me-1 text-primary"></i>
+                            {% if current_lang == 'mr' %}
+                                डीफॉल्ट लॉगिन: <strong>owner</strong> / पासवर्ड: <strong>owner</strong>
+                            {% else %}
+                                Default Login: <strong>owner</strong> / Password: <strong>owner</strong>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

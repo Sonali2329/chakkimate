@@ -1,0 +1,99 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-sliders text-primary me-2"></i>{{ tr.settings }} (दुकानाची माहिती व सेटिंग्ज)
+                    </h5>
+                    <span class="text-muted small">
+                        {% if current_lang == 'mr' %}
+                            येथे भरलेली माहिती सर्व पावत्यांवर, बिलांवर आणि व्हॉट्सॲप मेसेजमध्ये दिसेल.
+                        {% else %}
+                            This profile information appears on all printed tokens, PDF invoices, and WhatsApp bills.
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Shop Names -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">दुकानाचे नाव (English Shop Name)</label>
+                                <input type="text" name="shop_name" class="form-control" value="{{ settings.shop_name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">दुकानाचे नाव (मराठीत)</label>
+                                <input type="text" name="shop_name_mr" class="form-control" value="{{ settings.shop_name_mr }}">
+                            </div>
+                        </div>
+
+                        <!-- Owner & Contacts -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">मालकाचे नाव (Owner Name)</label>
+                                <input type="text" name="owner_name" class="form-control" value="{{ settings.owner_name }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">{{ tr.mobile }} (मुख्य नंबर)</label>
+                                <input type="tel" name="mobile" class="form-control" value="{{ settings.mobile }}" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">पर्यायी मोबाईल (Secondary)</label>
+                                <input type="tel" name="secondary_mobile" class="form-control" value="{{ settings.secondary_mobile }}">
+                            </div>
+                        </div>
+
+                        <!-- Addresses -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">पत्ता (English Address)</label>
+                                <textarea name="address" class="form-control" rows="2">{{ settings.address }}</textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">पत्ता (मराठीत पत्ता)</label>
+                                <textarea name="address_mr" class="form-control" rows="2">{{ settings.address_mr }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Language & UPI -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">डीफॉल्ट भाषा (Default Language)</label>
+                                <select name="default_language" class="form-select">
+                                    <option value="mr" {% if settings.default_language == 'mr' %}selected{% endif %}>मराठी (Marathi - शिफारस)</option>
+                                    <option value="en" {% if settings.default_language == 'en' %}selected{% endif %}>English (इंग्रजी)</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">UPI आयडी (QR पेमेंटसाठी)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-qr-code"></i></span>
+                                    <input type="text" name="upi_id" class="form-control" value="{{ settings.upi_id }}" placeholder="owner@okaxis">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bill Note -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">बिलाखालील संदेश (Invoice Footer Message)</label>
+                            <textarea name="footer_message" class="form-control" rows="2">{{ settings.footer_message }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-brand btn-lg py-2">
+                                <i class="bi bi-check2-circle me-1"></i> {{ tr.save }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

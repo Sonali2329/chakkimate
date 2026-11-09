@@ -1,0 +1,81 @@
+{% extends 'girni/base.html' %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-3">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+        <div>
+            <h4 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-funnel text-primary me-1"></i> {{ tr.production }} (स्वतःचे पीठ उत्पादन)
+            </h4>
+            <span class="text-muted small">
+                {% if current_lang == 'mr' %}कच्च्या धान्यापासून स्वतःचे पीठ तयार करणे व उत्पादन प्रमाण (Yield %) ट्रॅकिंग{% else %}Own Grain Flour Milling, Wastage & Yield Tracking{% endif %}
+            </span>
+        </div>
+        <div>
+            <a href="{% url 'production_create' %}" class="btn btn-brand">
+                <i class="bi bi-plus-circle me-1"></i> + {{ tr.new_batch }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Batches Table -->
+    <div class="card shadow-sm border-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>{{ tr.batch_number }}</th>
+                        <th>{{ tr.processing_date }}</th>
+                        <th>{{ tr.raw_grain_consumed }}</th>
+                        <th>{{ tr.flour_produced }}</th>
+                        <th class="text-end">{{ tr.input_weight }}</th>
+                        <th class="text-end">{{ tr.output_weight }}</th>
+                        <th class="text-end">{{ tr.wastage_weight }}</th>
+                        <th class="text-end">{{ tr.yield_percentage }}</th>
+                        <th>{{ tr.status }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in batches %}
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-dark">{{ b.batch_number }}</span>
+                            </td>
+                            <td>{{ b.batch_date|date:"d M Y" }}</td>
+                            <td>
+                                <span class="badge bg-warning-subtle text-warning-emphasis fs-6">
+                                    {{ b.raw_product.display_name }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success-subtle text-success fs-6">
+                                    {{ b.flour_product.display_name }}
+                                </span>
+                            </td>
+                            <td class="text-end fw-semibold text-danger">- {{ b.input_kg|floatformat:3 }} KG</td>
+                            <td class="text-end fw-bold text-success">+ {{ b.output_kg|floatformat:3 }} KG</td>
+                            <td class="text-end text-muted">{{ b.wastage_kg|floatformat:3 }} KG</td>
+                            <td class="text-end">
+                                <span class="badge {% if b.yield_percentage >= 80 %}bg-success{% elif b.yield_percentage >= 70 %}bg-warning text-dark{% else %}bg-secondary{% endif %} fs-6">
+                                    {{ b.yield_percentage }}%
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge bg-success-subtle text-success">{{ b.get_status_display }}</span>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-5 text-muted">
+                                <i class="bi bi-funnel fs-2 d-block mb-2"></i>
+                                {% if current_lang == 'mr' %}अद्याप कोणतीही उत्पादन बॅच नोंदवलेली नाही.{% else %}No production batches recorded yet.{% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
