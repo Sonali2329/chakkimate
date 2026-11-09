@@ -1,60 +1,75 @@
 {% extends 'girni/base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-lg border-0">
-                <div class="card-body p-4 p-md-5">
-                    <div class="text-center mb-4">
-                        <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 70px; height: 70px;">
-                            <i class="bi bi-gear-wide-connected fs-1"></i>
-                        </div>
-                        <h3 class="fw-bold text-dark">ChakkiMate (चक्कीमेट)</h3>
-                        <p class="text-muted small">
-                            {% if current_lang == 'mr' %}
-                                गिरणी व्यवस्थापन प्रणाली - मालक लॉगिन
-                            {% else %}
-                                Flour Mill Management System - Owner Login
-                            {% endif %}
-                        </p>
-                    </div>
-
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-person me-1"></i>
-                                {% if current_lang == 'mr' %}वापरकर्ता नाव (Username){% else %}Username{% endif %}
-                            </label>
-                            <input type="text" name="username" class="form-control form-control-lg" placeholder="owner" required autofocus>
-                        </div>
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-semibold">
-                                <i class="bi bi-key me-1"></i>
-                                {% if current_lang == 'mr' %}पासवर्ड (Password){% else %}Password{% endif %}
-                            </label>
-                            <input type="password" name="password" class="form-control form-control-lg" placeholder="••••••••" required>
-                        </div>
-
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-brand btn-lg py-2">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>{{ tr.login }}
-                            </button>
-                        </div>
-
-                        <div class="alert alert-info py-2 px-3 small border-0 bg-light text-muted text-center mb-0">
-                            <i class="bi bi-shield-check me-1 text-primary"></i>
-                            {% if current_lang == 'mr' %}
-                                डीफॉल्ट लॉगिन: <strong>owner</strong> / पासवर्ड: <strong>owner</strong>
-                            {% else %}
-                                Default Login: <strong>owner</strong> / Password: <strong>owner</strong>
-                            {% endif %}
-                        </div>
-                    </form>
+<div class="min-vh-100 d-flex flex-column align-items-center justify-content-center px-3 py-4" style="background: linear-gradient(135deg, #1A253C 0%, #0F172A 100%);">
+    <div class="card shadow-2xl border-0 rounded-4" style="max-width: 440px; width: 100%; background: #FFFFFF; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);">
+        <div class="card-body p-4 p-sm-5">
+            <!-- Header with Logo and Language Toggle -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <img src="{% static 'icons/icon-192.png' %}" width="38" height="38" class="rounded-3 shadow-sm" alt="Logo">
+                    <span class="fw-bold fs-5 text-dark">ChakkiMate</span>
+                </div>
+                <div>
+                    {% if current_lang == 'mr' %}
+                        <a href="{% url 'set_language' 'en' %}" class="badge bg-light text-dark border text-decoration-none py-1.5 px-2.5 fw-semibold" title="Switch to English">
+                            <i class="bi bi-translate me-1"></i> ENG
+                        </a>
+                    {% else %}
+                        <a href="{% url 'set_language' 'mr' %}" class="badge bg-light text-dark border text-decoration-none py-1.5 px-2.5 fw-semibold" title="मराठी भाषेवर स्विच करा">
+                            <i class="bi bi-translate me-1"></i> मराठी
+                        </a>
+                    {% endif %}
                 </div>
             </div>
+
+            <div class="text-center mb-4">
+                <h4 class="fw-bold text-dark mb-1">
+                    {% if current_lang == 'mr' %}चक्कीमेट (ChakkiMate){% else %}ChakkiMate ERP{% endif %}
+                </h4>
+                <p class="text-muted small mb-0">
+                    {% if current_lang == 'mr' %}
+                        गिरणी व्यवस्थापन प्रणाली &bull; मालक लॉगिन
+                    {% else %}
+                        Flour Mill Management System &bull; Owner Login
+                    {% endif %}
+                </p>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold text-dark small">
+                        <i class="bi bi-person me-1 text-primary"></i>
+                        {% if current_lang == 'mr' %}वापरकर्ता नाव (Username){% else %}Username{% endif %}
+                    </label>
+                    <input type="text" name="username" class="form-control form-control-lg fs-6" placeholder="owner" required autofocus>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-dark small">
+                        <i class="bi bi-key me-1 text-warning"></i>
+                        {% if current_lang == 'mr' %}पासवर्ड (Password){% else %}Password{% endif %}
+                    </label>
+                    <input type="password" name="password" class="form-control form-control-lg fs-6" placeholder="••••••••" required>
+                </div>
+
+                <div class="d-grid mb-3">
+                    <button type="submit" class="btn btn-primary btn-lg py-2.5 fw-bold" style="background-color: #1A253C; border-color: #1A253C;">
+                        <i class="bi bi-box-arrow-in-right me-1.5"></i>{{ tr.login }}
+                    </button>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 small border-0 bg-light text-muted text-center mb-0 rounded-3">
+                    <i class="bi bi-shield-check me-1 text-primary"></i>
+                    {% if current_lang == 'mr' %}
+                        डीफॉल्ट लॉगिन: <strong>owner</strong> &bull; पासवर्ड: <strong>owner</strong>
+                    {% else %}
+                        Default Login: <strong>owner</strong> &bull; Password: <strong>owner</strong>
+                    {% endif %}
+                </div>
+            </form>
         </div>
     </div>
 </div>
