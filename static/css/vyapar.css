@@ -399,3 +399,78 @@ body {
         box-shadow: none !important;
     }
 }
+
+/* Quick Weight Buttons for Counter Speed */
+.quick-weight-container {
+    user-select: none;
+}
+.quick-weight-btn {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #1E293B;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.quick-weight-btn:hover {
+    background: #EFF6FF;
+    border-color: #2563EB;
+    color: #1D4ED8;
+}
+.quick-weight-btn:active {
+    transform: scale(0.95);
+    background: #DBEAFE;
+}
+.quick-weight-btn.highlight-katta {
+    background: #FEF3C7;
+    border-color: #F59E0B;
+    color: #92400E;
+}
+.quick-weight-btn.highlight-katta:hover {
+    background: #FDE68A;
+}
+.quick-weight-clear {
+    background: #FEE2E2;
+    border: 1px solid #FCA5A5;
+    color: #991B1B;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+}
+.quick-weight-clear:hover {
+    background: #EF4444;
+    color: #FFFFFF;
+}
+.btn-xs {
+    padding: 2px 6px;
+    font-size: 0.74rem;
+    line-height: 1.2;
+}
+
+/* Dynamic UPI QR Code Card */
+.upi-qr-card {
+    background: #FFFFFF;
+    border: 1.5px dashed #2563EB;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+.upi-qr-box {
+    display: inline-block;
+    padding: 8px;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+}
+.upi-qr-box img, .upi-qr-box canvas {
+    display: block;
+    margin: 0 auto;
+}

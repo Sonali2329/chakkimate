@@ -7,7 +7,7 @@
         <a href="{% url 'grinding_order_list' %}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i> {{ tr.grinding_orders }}
         </a>
-        <div class="d-flex gap-2">
+        <div class="d-flex flex-wrap gap-2">
             <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
                 <i class="bi bi-printer me-1"></i> {{ tr.print_token }}
             </button>
@@ -15,7 +15,13 @@
                 <a href="{% url 'invoice_pdf' order.invoice.id %}" class="btn btn-outline-danger btn-sm">
                     <i class="bi bi-file-earmark-pdf me-1"></i> {{ tr.download_pdf }}
                 </a>
-                <a href="https://wa.me/91{{ order.customer.mobile }}?text=नमस्कार%20{{ order.customer.name }},%20{{ shop_settings.shop_name }}%20मधील%20आपले%20दळण%20टोकन%20क्र.%20{{ order.token_number }}%20(वजन%20{{ order.input_kg }}%20किलो,%20मजुरी%20रुपये%20{{ order.charges }})%20नोंदवले%20आहे." target="_blank" class="btn btn-success btn-sm">
+            {% endif %}
+            {% if order.status == 'COMPLETED' %}
+                <a href="https://wa.me/91{{ order.customer.mobile }}?text=नमस्कार%20{{ order.customer.name|urlencode }}%20जी,%20{{ shop_settings.shop_name|urlencode }}%20कडून%20कळविण्यात%20आनंद%20होत%20आहे%20की%20आपले%20{{ order.input_kg|floatformat:2 }}%20किलो%20{{ order.grain.display_name|urlencode }}%20चे%20दळण%20तयार%20झाले%20आहे.%20टोकन%20क्र:%20{{ order.token_number|default:order.order_number }}.%20एकूण%20मजुरी:%20₹{{ order.charges|floatformat:2 }}.%20कृपया%20घेऊन%20जावे.%20धन्यवाद!" target="_blank" class="btn btn-whatsapp-vyapar btn-sm fw-bold">
+                    <i class="bi bi-whatsapp me-1"></i> दळण तयार मेसेज पाठवा
+                </a>
+            {% else %}
+                <a href="https://wa.me/91{{ order.customer.mobile }}?text=नमस्कार%20{{ order.customer.name|urlencode }},%20{{ shop_settings.shop_name|urlencode }}%20मधील%20आपले%20दळण%20टोकन%20क्र.%20{{ order.token_number|default:order.order_number }}%20(वजन%20{{ order.input_kg|floatformat:2 }}%20किलो,%20मजुरी%20रुपये%20{{ order.charges|floatformat:2 }})%20नोंदवले%20आहे." target="_blank" class="btn btn-success btn-sm">
                     <i class="bi bi-whatsapp me-1"></i> {{ tr.share_whatsapp }}
                 </a>
             {% endif %}
@@ -126,6 +132,19 @@
                     {% endif %}
                 </div>
 
+                {% if not order.is_paid and shop_settings.upi_id %}
+                    <div class="upi-qr-card my-3 mx-auto text-center" style="max-width: 250px;">
+                        <div class="small fw-bold text-dark mb-1">
+                            <i class="bi bi-qr-code text-primary"></i> Scan &amp; Pay मजुरी
+                        </div>
+                        <div class="upi-qr-box my-1">
+                            <div id="tokenUpiQr" class="d-flex justify-content-center"></div>
+                        </div>
+                        <div class="fw-bold text-success fs-5">₹{{ order.charges|floatformat:2 }}</div>
+                        <div class="small text-muted" style="font-size: 0.72rem;">{{ shop_settings.upi_id }}</div>
+                    </div>
+                {% endif %}
+
                 {% if order.notes %}
                     <div class="small text-muted mb-3">
                         <strong>{{ tr.notes }}:</strong> {{ order.notes }}
@@ -187,6 +206,19 @@
 
                     <!-- Quick one-click status transitions -->
                     <hr class="my-4">
+
+                    {% if order.status == 'COMPLETED' %}
+                        <div class="alert alert-success border-success d-flex align-items-center justify-content-between p-2.5 mb-3 shadow-sm">
+                            <div>
+                                <h6 class="fw-bold mb-0 text-success"><i class="bi bi-check-circle-fill me-1"></i> दळण तयार आहे!</h6>
+                                <span class="small text-muted">ग्राहकाला व्हॉट्सॲपवर कळवा</span>
+                            </div>
+                            <a href="https://wa.me/91{{ order.customer.mobile }}?text=नमस्कार%20{{ order.customer.name|urlencode }}%20जी,%20{{ shop_settings.shop_name|urlencode }}%20कडून%20कळविण्यात%20आनंद%20होत%20आहे%20की%20आपले%20{{ order.input_kg|floatformat:2 }}%20किलो%20{{ order.grain.display_name|urlencode }}%20चे%20दळण%20तयार%20झाले%20आहे.%20टोकन%20क्र:%20{{ order.token_number|default:order.order_number }}.%20एकूण%20मजुरी:%20₹{{ order.charges|floatformat:2 }}.%20कृपया%20घेऊन%20जावे.%20धन्यवाद!" target="_blank" class="btn btn-whatsapp-vyapar btn-sm fw-bold">
+                                <i class="bi bi-whatsapp"></i> मेसेज पाठवा
+                            </a>
+                        </div>
+                    {% endif %}
+
                     <div class="fw-bold small text-muted mb-2">{% if current_lang == 'mr' %}जलद स्थिती बदल:{% else %}Quick Transitions:{% endif %}</div>
                     <div class="d-grid gap-2">
                         {% if order.status == 'PENDING' %}
@@ -224,4 +256,24 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        {% if not order.is_paid and shop_settings.upi_id %}
+        const tokenQr = document.getElementById("tokenUpiQr");
+        if (tokenQr && typeof QRCode !== 'undefined') {
+            new QRCode(tokenQr, {
+                text: "upi://pay?pa={{ shop_settings.upi_id }}&pn={{ shop_settings.shop_name|urlencode }}&am={{ order.charges|floatformat:2 }}&cu=INR&tn=TOKEN-{{ order.token_number|default:order.order_number }}",
+                width: 120,
+                height: 120,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+        {% endif %}
+    });
+</script>
 {% endblock %}

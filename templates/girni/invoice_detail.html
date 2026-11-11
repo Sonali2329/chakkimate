@@ -158,13 +158,27 @@
                     </div>
                 </div>
 
-                <!-- UPI QR & Notes -->
+                <!-- Dynamic UPI QR Code & Notes -->
                 <div class="border-top pt-3 text-center">
-                    {% if shop_settings.upi_id %}
+                    {% if shop_settings.upi_id and invoice.balance_due > 0 %}
+                        <div class="upi-qr-card my-2 mx-auto" style="max-width: 290px;">
+                            <div class="d-flex align-items-center justify-content-center gap-1.5 mb-1">
+                                <i class="bi bi-qr-code text-primary fs-5"></i>
+                                <span class="fw-bold text-dark small">UPI द्वारे लगेच स्कॅन करा व भरा</span>
+                            </div>
+                            <div class="upi-qr-box my-1">
+                                <div id="invoiceUpiQr" class="d-flex justify-content-center"></div>
+                            </div>
+                            <div class="fw-bold text-success fs-5">₹{{ invoice.balance_due|floatformat:2 }}</div>
+                            <div class="small text-muted" style="font-size: 0.74rem;">
+                                UPI: <strong class="text-dark">{{ shop_settings.upi_id }}</strong><br>
+                                (PhonePe / Google Pay / Paytm / BHIM)
+                            </div>
+                        </div>
+                    {% elif shop_settings.upi_id %}
                         <div class="mb-2">
-                            <span class="badge bg-light text-dark border px-3 py-2">
-                                <i class="bi bi-qr-code-scan me-1 text-primary"></i> 
-                                Pay via UPI / QR: <strong>{{ shop_settings.upi_id }}</strong>
+                            <span class="badge bg-success-subtle text-success border border-success px-3 py-2">
+                                <i class="bi bi-check-circle-fill me-1"></i> पूर्ण बिल जमा आहे (Fully Paid) &bull; UPI: {{ shop_settings.upi_id }}
                             </span>
                         </div>
                     {% endif %}
@@ -270,5 +284,21 @@
             document.body.classList.remove('print-thermal');
         }, 1000);
     }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        {% if shop_settings.upi_id and invoice.balance_due > 0 %}
+        const qrEl = document.getElementById("invoiceUpiQr");
+        if (qrEl && typeof QRCode !== 'undefined') {
+            new QRCode(qrEl, {
+                text: "upi://pay?pa={{ shop_settings.upi_id }}&pn={{ shop_settings.shop_name|urlencode }}&am={{ invoice.balance_due|floatformat:2 }}&cu=INR&tn={{ invoice.invoice_number }}",
+                width: 130,
+                height: 130,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+        {% endif %}
+    });
 </script>
 {% endblock %}

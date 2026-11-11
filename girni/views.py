@@ -677,7 +677,10 @@ def grinding_order_status_update_view(request, order_id):
         if wastage_kg:
             order.wastage_kg = Decimal(wastage_kg)
         order.save()
-        messages.success(request, f"Order status updated to {order.get_status_display()}.")
+        if new_status == 'COMPLETED':
+            messages.success(request, f"दळण तयार झाले आहे! खालील बटनावर क्लिक करून {order.customer.name} यांना WhatsApp वर त्वरित कळवा.")
+        else:
+            messages.success(request, f"दळण स्थिती यशस्वीपणे बदलली: {order.get_status_display()}.")
 
     return redirect('grinding_order_detail', order_id=order.id)
 
@@ -1100,4 +1103,23 @@ def manifest_view(request):
     with open(mf_path, 'r', encoding='utf-8') as f:
         content = f.read()
     return HttpResponse(content, content_type='application/manifest+json')
+
+
+# ==========================================
+# HEALTH CHECK & KEEP-ALIVE PING (ZERO COLD-START)
+# ==========================================
+def ping_health_view(request):
+    """
+    Lightweight health check and keep-alive ping endpoint.
+    Returns HTTP 200 with server status in <5ms.
+    Used by uptime pingers (UptimeRobot, cron-job.org) to prevent Render free-tier idle spin-down.
+    """
+    return JsonResponse({
+        'status': 'ok',
+        'app': 'ChakkiMate',
+        'tagline': 'Flour Mill ERP & POS',
+        'timestamp': timezone.now().isoformat(),
+        'uptime_status': 'warm',
+        'version': '2.0.0'
+    }, status=200)
 

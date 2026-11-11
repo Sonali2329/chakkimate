@@ -93,6 +93,16 @@
                                         <input type="number" step="0.001" min="0.1" name="input_kg" id="inputKg" class="form-control fw-bold fs-4" placeholder="0.000" required>
                                         <span class="input-group-text fw-bold">KG</span>
                                     </div>
+                                    <!-- Quick Weight Counter Buttons -->
+                                    <div class="quick-weight-container mt-2 d-flex flex-wrap gap-1 align-items-center">
+                                        <button type="button" class="quick-weight-btn" data-weight="1">+1 kg</button>
+                                        <button type="button" class="quick-weight-btn" data-weight="2">+2 kg</button>
+                                        <button type="button" class="quick-weight-btn" data-weight="5">+5 kg</button>
+                                        <button type="button" class="quick-weight-btn" data-weight="10">+10 kg</button>
+                                        <button type="button" class="quick-weight-btn" data-weight="20">+20 kg</button>
+                                        <button type="button" class="quick-weight-btn highlight-katta" data-weight="50">+50 kg <small>(कट्टा)</small></button>
+                                        <button type="button" class="quick-weight-clear" id="clearWeightBtn" title="वजन साफ करा (Clear)">✕ साफ</button>
+                                    </div>
                                 </div>
 
                                 <div class="col-md-4">
@@ -199,6 +209,29 @@
 
         inputKg.addEventListener("input", recalc);
         ratePerKg.addEventListener("input", recalc);
+
+        // Quick Weight Buttons for rapid counter entry
+        document.querySelectorAll(".quick-weight-btn").forEach(function(btn) {
+            btn.addEventListener("click", function(e) {
+                e.preventDefault();
+                const addVal = parseFloat(this.getAttribute("data-weight")) || 0;
+                let curVal = parseFloat(inputKg.value) || 0;
+                curVal += addVal;
+                inputKg.value = Number.isInteger(curVal) ? curVal : parseFloat(curVal.toFixed(3));
+                recalc();
+                inputKg.focus();
+            });
+        });
+
+        const clearWeightBtn = document.getElementById("clearWeightBtn");
+        if (clearWeightBtn) {
+            clearWeightBtn.addEventListener("click", function(e) {
+                e.preventDefault();
+                inputKg.value = "";
+                recalc();
+                inputKg.focus();
+            });
+        }
 
         // Toggle payment mode dropdown
         isPaidSwitch.addEventListener("change", function() {

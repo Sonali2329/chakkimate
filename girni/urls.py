@@ -73,4 +73,8 @@ urlpatterns = [
     path('manifest.json', views.manifest_view, name='pwa_manifest'),
     path('service-worker.js', views.service_worker_view, name='pwa_service_worker'),
     path('offline/', views.offline_view, name='pwa_offline'),
+
+    # Health Check & Keep-Alive Ping (Render Zero Cold-Start)
+    path('ping/', views.ping_health_view, name='ping_health'),
+    path('health/', views.ping_health_view, name='health_check'),
 ]

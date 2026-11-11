@@ -133,9 +133,16 @@
                                 {% endif %}
                             </td>
                             <td class="text-end">
-                                <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-2.5">
-                                    <i class="bi bi-receipt me-1"></i> {{ tr.view }}
-                                </a>
+                                <div class="d-inline-flex gap-1.5 align-items-center">
+                                    {% if ord.status == 'COMPLETED' %}
+                                        <a href="https://wa.me/91{{ ord.customer.mobile }}?text=नमस्कार%20{{ ord.customer.name|urlencode }}%20जी,%20{{ shop_settings.shop_name|urlencode }}%20कडून%20कळविण्यात%20आनंद%20होत%20आहे%20की%20आपले%20{{ ord.input_kg|floatformat:2 }}%20किलो%20{{ ord.grain.display_name|urlencode }}%20चे%20दळण%20तयार%20झाले%20आहे.%20टोकन%20क्र:%20{{ ord.token_number|default:ord.order_number }}.%20एकूण%20मजुरी:%20₹{{ ord.charges|floatformat:2 }}.%20कृपया%20घेऊन%20जावे.%20धन्यवाद!" target="_blank" class="btn btn-whatsapp-vyapar btn-sm" title="दळण तयार व्हॉट्सॲप मेसेज">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-2.5">
+                                        <i class="bi bi-receipt me-1"></i> {{ tr.view }}
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                     {% empty %}

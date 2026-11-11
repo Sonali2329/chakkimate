@@ -94,6 +94,15 @@
                                                     <input type="number" step="0.001" min="0.05" name="quantity_kg[]" class="form-control qty-input fw-bold" placeholder="0.000" required>
                                                     <span class="input-group-text small fw-bold">KG</span>
                                                 </div>
+                                                <div class="quick-weight-container mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                                    <button type="button" class="quick-weight-btn btn-xs" data-weight="1">+1</button>
+                                                    <button type="button" class="quick-weight-btn btn-xs" data-weight="2">+2</button>
+                                                    <button type="button" class="quick-weight-btn btn-xs" data-weight="5">+5</button>
+                                                    <button type="button" class="quick-weight-btn btn-xs" data-weight="10">+10</button>
+                                                    <button type="button" class="quick-weight-btn btn-xs" data-weight="25">+25</button>
+                                                    <button type="button" class="quick-weight-btn btn-xs highlight-katta" data-weight="50">+50</button>
+                                                    <button type="button" class="quick-weight-clear btn-xs clear-row-weight" title="Clear">✕</button>
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="input-group">
@@ -262,6 +271,29 @@
 
             qtyInput.addEventListener("input", recalculate);
             rateInput.addEventListener("input", recalculate);
+
+            // Quick Weight Buttons for this row
+            row.querySelectorAll(".quick-weight-btn").forEach(function(btn) {
+                btn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    const addVal = parseFloat(this.getAttribute("data-weight")) || 0;
+                    let curVal = parseFloat(qtyInput.value) || 0;
+                    curVal += addVal;
+                    qtyInput.value = Number.isInteger(curVal) ? curVal : parseFloat(curVal.toFixed(3));
+                    recalculate();
+                    qtyInput.focus();
+                });
+            });
+
+            const clearBtn = row.querySelector(".clear-row-weight");
+            if (clearBtn) {
+                clearBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    qtyInput.value = "";
+                    recalculate();
+                    qtyInput.focus();
+                });
+            }
 
             removeBtn.addEventListener("click", function() {
                 if (itemsBody.querySelectorAll(".item-row").length > 1) {

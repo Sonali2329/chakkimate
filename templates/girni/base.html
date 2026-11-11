@@ -317,6 +317,11 @@
 
             <!-- Global Search & Settings -->
             <div class="d-flex align-items-center gap-2">
+                <!-- Fast Dynamic UPI QR Modal Button -->
+                <button type="button" class="btn btn-outline-light btn-sm rounded px-2.5 fw-bold d-flex align-items-center gap-1.5 shadow-sm" data-bs-toggle="modal" data-bs-target="#quickUpiModal" title="जलद UPI QR कोड दाखवा">
+                    <i class="bi bi-qr-code-scan"></i> <span class="d-none d-sm-inline">UPI QR</span>
+                </button>
+
                 <!-- Search Box -->
                 <form action="{% url 'customer_list' %}" method="get" class="d-none d-lg-block">
                     <div class="input-group input-group-sm">
@@ -481,8 +486,62 @@
         </div>
     </div>
 
+    {% if user.is_authenticated %}
+    <!-- Quick Dynamic UPI QR Modal -->
+    <div class="modal fade no-print" id="quickUpiModal" tabindex="-1" aria-labelledby="quickUpiModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 360px;">
+            <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="modal-header text-white py-2.5 px-3" style="background: var(--vyapar-navy);">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-qr-code-scan fs-5 text-warning"></i>
+                        <h6 class="modal-title fw-bold mb-0 text-white" id="quickUpiModalLabel">
+                            UPI द्वारे पैसे स्वीकारा
+                        </h6>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center p-4">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted mb-1">रक्कम टाका (पर्यायी):</label>
+                        <div class="input-group">
+                            <span class="input-group-text fw-bold">₹</span>
+                            <input type="number" id="quickUpiAmount" class="form-control text-center fw-bold fs-5" placeholder="0.00" min="1" step="1">
+                            <button type="button" class="btn btn-primary fw-bold px-3" id="updateQuickUpiBtn">QR अपडेट</button>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-1 mb-3">
+                        <button type="button" class="btn btn-xs quick-weight-btn" onclick="setQuickUpiAmount(50)">₹50</button>
+                        <button type="button" class="btn btn-xs quick-weight-btn" onclick="setQuickUpiAmount(100)">₹100</button>
+                        <button type="button" class="btn btn-xs quick-weight-btn" onclick="setQuickUpiAmount(200)">₹200</button>
+                        <button type="button" class="btn btn-xs quick-weight-btn" onclick="setQuickUpiAmount(500)">₹500</button>
+                        <button type="button" class="btn btn-xs quick-weight-clear" onclick="setQuickUpiAmount(0)">साफ</button>
+                    </div>
+
+                    <div class="upi-qr-card p-3 my-2 d-inline-block shadow-sm">
+                        <div id="quickUpiQrCode" class="d-flex justify-content-center"></div>
+                    </div>
+
+                    <div class="mt-2">
+                        <div class="fw-bold text-success fs-4" id="quickUpiAmountText">कोणतीही रक्कम (Any Amount)</div>
+                        <div class="fw-bold text-dark mt-1">{{ shop_settings.shop_name }}</div>
+                        <div class="text-muted small">
+                            UPI ID: <span class="fw-bold text-primary">{{ shop_settings.upi_id|default:'chakkimate@okaxis' }}</span>
+                        </div>
+                        <div class="text-muted mt-2" style="font-size: 0.72rem;">
+                            (PhonePe, Google Pay, Paytm, BHIM द्वारे त्वरित स्कॅन करा)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Bootstrap 5 Bundle JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Pure Offline JavaScript QR Code Generator -->
+    <script src="{% static 'js/qrcode.min.js' %}"></script>
 
     <!-- PWA Service Worker Registration & Install Prompt Handler -->
     <script>
@@ -565,6 +624,53 @@
                 window.location.href = "{% url 'expense_create' %}";
             }
         });
+        // 4. Quick Dynamic UPI QR Code Generator
+        function generateQuickUpiQR(amt) {
+            const el = document.getElementById("quickUpiQrCode");
+            if (!el || typeof QRCode === 'undefined') return;
+            el.innerHTML = "";
+            const upiId = "{{ shop_settings.upi_id|default:'chakkimate@okaxis' }}";
+            const shopName = "{{ shop_settings.shop_name|escapejs }}";
+            let upiUrl = "upi://pay?pa=" + encodeURIComponent(upiId) + "&pn=" + encodeURIComponent(shopName) + "&cu=INR";
+            const num = parseFloat(amt);
+            if (!isNaN(num) && num > 0) {
+                upiUrl += "&am=" + num.toFixed(2);
+                document.getElementById("quickUpiAmountText").textContent = "₹" + num.toFixed(2);
+            } else {
+                document.getElementById("quickUpiAmountText").textContent = "कोणतीही रक्कम (Any Amount)";
+            }
+            new QRCode(el, {
+                text: upiUrl,
+                width: 160,
+                height: 160,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        window.setQuickUpiAmount = function(val) {
+            const inp = document.getElementById("quickUpiAmount");
+            if (inp) {
+                inp.value = val > 0 ? val : "";
+                generateQuickUpiQR(val);
+            }
+        };
+
+        const modalEl = document.getElementById("quickUpiModal");
+        if (modalEl) {
+            modalEl.addEventListener("shown.bs.modal", function() {
+                const inp = document.getElementById("quickUpiAmount");
+                generateQuickUpiQR(inp ? inp.value : 0);
+            });
+            const updBtn = document.getElementById("updateQuickUpiBtn");
+            if (updBtn) {
+                updBtn.addEventListener("click", function() {
+                    const inp = document.getElementById("quickUpiAmount");
+                    generateQuickUpiQR(inp ? inp.value : 0);
+                });
+            }
+        }
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>

@@ -207,13 +207,44 @@ def generate_invoice_pdf(invoice_id):
         ('LINEBELOW', (1, 4), (2, 4), 1.5, colors.HexColor('#DC2626') if invoice.balance_due > 0 else colors.HexColor('#16A34A')),
     ]))
     elements.append(summary_table)
-    elements.append(Spacer(1, 20))
+    elements.append(Spacer(1, 15))
 
-    # 5. Payment details & Shop footer
+    # 5. Dynamic UPI QR Code & Payment Details Box
+    if settings.upi_id and invoice.balance_due > 0:
+        from reportlab.graphics.shapes import Drawing
+        from reportlab.graphics.barcode.qr import QrCodeWidget
+        upi_payload = f"upi://pay?pa={settings.upi_id}&pn={settings.shop_name}&am={invoice.balance_due:.2f}&cu=INR&tn={invoice.invoice_number}"
+        qr = QrCodeWidget(upi_payload)
+        qr_draw = Drawing(90, 90)
+        qr_draw.add(qr)
+        
+        qr_block_data = [
+            [
+                qr_draw,
+                Paragraph(
+                    f"<b>SCAN TO PAY VIA UPI (Rs. {invoice.balance_due:.2f})</b><br/>"
+                    f"UPI ID: <b>{settings.upi_id}</b><br/>"
+                    f"<font size=8 color='#475569'>Use PhonePe, Google Pay, Paytm, or BHIM to pay instantly.<br/>"
+                    f"{settings.footer_message}</font>",
+                    subtitle_style
+                )
+            ]
+        ]
+        qr_block_table = Table(qr_block_data, colWidths=[100, 420])
+        qr_block_table.setStyle(TableStyle([
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F8FAFC')),
+            ('BOX', (0, 0), (-1, -1), 1, colors.HexColor('#CBD5E1')),
+            ('PADDING', (0, 0), (-1, -1), 6),
+        ]))
+        elements.append(qr_block_table)
+        elements.append(Spacer(1, 10))
+
+    # 6. Shop footer
     footer_text = settings.footer_message
-    if settings.upi_id:
-        footer_text += f"<br/><b>Pay via UPI / QR: {settings.upi_id}</b>"
-    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#E2E8F0'), spaceAfter=10))
+    if settings.upi_id and invoice.balance_due <= 0:
+        footer_text += f"<br/><b>UPI ID: {settings.upi_id} (Paid)</b>"
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#E2E8F0'), spaceAfter=8))
     elements.append(Paragraph(footer_text, subtitle_style))
     elements.append(Paragraph("<i>Computer generated invoice by ChakkiMate Girni Management System.</i>", subtitle_style))
 
