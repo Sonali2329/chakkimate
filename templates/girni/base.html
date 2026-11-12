@@ -426,8 +426,8 @@
         </div>
     </header>
 
-    <!-- Vyapar Sub-Navigation Module Bar -->
-    <nav class="vyapar-subnav no-print sticky-top">
+    <!-- Vyapar Sub-Navigation Module Bar (Hidden on Mobile for 56px App Bar + Bottom Nav, R04) -->
+    <nav class="vyapar-subnav no-print sticky-top d-none d-md-block">
         <div class="container-fluid px-3 px-lg-4 d-flex align-items-center overflow-x-auto py-0">
             <a href="{% url 'dashboard' %}" class="vyapar-nav-link {% if request.path == '/' %}active{% endif %}">
                 <i class="bi bi-speedometer2 text-primary"></i> {{ tr.dashboard }}

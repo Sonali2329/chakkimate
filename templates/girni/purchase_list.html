@@ -82,7 +82,7 @@
                         <th>{{ tr.suppliers }}</th>
                         <th>{{ tr.items }}</th>
                         <th class="text-end">{{ tr.total_amount }}</th>
-                        <th class="text-end">{{ tr.amount_paid }}</th>
+                        <th class="text-end">{% if current_lang == 'mr' %}दिलेली रक्कम (₹){% else %}Amount Paid (₹){% endif %}</th>
                         <th class="text-end">{{ tr.balance_due }}</th>
                         <th>{{ tr.status }}</th>
                         <th class="text-end">{{ tr.actions }}</th>

@@ -6,7 +6,7 @@
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
         <div>
             <h4 class="fw-bold mb-1 text-dark">
-                <i class="bi bi-people text-primary me-2"></i>{{ tr.customers }} (ग्राहक खाते)
+                <i class="bi bi-people text-primary me-2"></i>{% if current_lang == 'mr' %}ग्राहक खाते / पार्टी{% else %}Customer Profiles / Khata{% endif %}
             </h4>
             <span class="text-muted small">
                 {% if current_lang == 'mr' %}कायमचे व किरकोळ ग्राहक यादी, व्यवहार इतिहास व बाकी हिशोब{% else %}Customer Profiles, Ledgers and Balances{% endif %}

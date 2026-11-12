@@ -95,10 +95,17 @@
                         <thead class="table-light small">
                             <tr>
                                 <th style="width: 5%;">#</th>
-                                <th>{{ tr.items }}</th>
-                                <th class="text-end" style="width: 20%;">{{ tr.input_weight }}</th>
-                                <th class="text-end" style="width: 20%;">{{ tr.selling_rate_kg }}</th>
-                                <th class="text-end" style="width: 20%;">{{ tr.charges }} (₹)</th>
+                                {% if invoice.invoice_type == 'SALE' %}
+                                    <th>{% if current_lang == 'mr' %}वस्तू / तपशील{% else %}Item Description{% endif %}</th>
+                                    <th class="text-end" style="width: 20%;">{% if current_lang == 'mr' %}वजन (प्रमाण){% else %}Quantity / Weight{% endif %}</th>
+                                    <th class="text-end" style="width: 20%;">{% if current_lang == 'mr' %}दर (₹ / KG){% else %}Rate (₹/KG){% endif %}</th>
+                                    <th class="text-end" style="width: 20%;">{% if current_lang == 'mr' %}रक्कम (₹){% else %}Amount (₹){% endif %}</th>
+                                {% else %}
+                                    <th>{% if current_lang == 'mr' %}धान्य प्रकार{% else %}Grain Type{% endif %}</th>
+                                    <th class="text-end" style="width: 20%;">{% if current_lang == 'mr' %}आणलेले वजन{% else %}Input Weight{% endif %}</th>
+                                    <th class="text-end" style="width: 20%;">{% if current_lang == 'mr' %}दळण दर (₹ / KG){% else %}Rate (₹/KG){% endif %}</th>
+                                    <th class="text-end" style="width: 20%;">{% if current_lang == 'mr' %}दळण मजुरी (₹){% else %}Charges (₹){% endif %}</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody>

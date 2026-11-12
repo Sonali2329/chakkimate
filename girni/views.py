@@ -161,9 +161,14 @@ def dashboard_view(request):
 
     sales_chart_has_data = any(v > 0 for v in weekly_sales_data) or any(v > 0 for v in weekly_grinding_data)
 
-    # 10. Vyapar Daybook (Today's Transactions Register) - Exclude Cancelled, Real Modes (B20)
+    # 10. Vyapar Daybook (Today's Transactions Register) - Real Money In/Out & True Modes (B20)
     daybook_entries = []
-    for g in GrindingOrder.objects.filter(order_date__date=today).exclude(status='CANCELLED').select_related('customer', 'grain')[:8]:
+    
+    # 10a. Grinding orders (exclude cancelled, identify paid vs unpaid credit)
+    for g in GrindingOrder.objects.filter(order_date__date=today).exclude(status='CANCELLED').select_related('customer', 'grain')[:10]:
+        g_flow = 'INFLOW' if g.is_paid else 'CREDIT'
+        g_status = 'पूर्ण (जमा)' if g.is_paid else 'बाकी (Unpaid)'
+        g_mode = g.get_payment_mode_display() if g.is_paid else 'उधार (बाकी)'
         daybook_entries.append({
             'time': g.order_date,
             'type': 'GRINDING',
@@ -171,36 +176,61 @@ def dashboard_view(request):
             'voucher_no': g.token_number or g.order_number,
             'party': g.customer.name,
             'amount': g.charges,
-            'flow': 'INFLOW',
-            'mode': g.payment_mode or 'CASH',
-            'status': g.get_status_display()
+            'flow': g_flow,
+            'mode': g_mode,
+            'status': g_status
         })
-    for s in Sale.objects.filter(sale_date=today, status='COMPLETED').select_related('customer', 'invoice')[:8]:
-        mode = 'CASH / बिल'
+
+    # 10b. Sales (check true invoice status: VOID, Full Paid, Partial, Credit)
+    for s in Sale.objects.filter(sale_date=today).select_related('customer', 'invoice')[:10]:
+        mode = 'रोख (CASH)'
+        flow = 'INFLOW'
+        status_txt = 'पूर्ण (Paid)'
+        amt = s.total
+
         if hasattr(s, 'invoice') and s.invoice:
-            if s.invoice.balance_due == Decimal('0.00'):
+            if s.invoice.status == 'VOID':
+                flow = 'VOID'
+                mode = 'रद्द (Void)'
+                status_txt = 'रद्द (VOID)'
+                amt = Decimal('0.00')
+            elif s.invoice.balance_due == Decimal('0.00'):
                 p_first = s.invoice.payments.first()
-                mode = p_first.get_payment_mode_display() if p_first else 'पूर्ण जमा'
+                mode = p_first.get_payment_mode_display() if p_first else 'रोख (CASH)'
+                status_txt = 'पूर्ण (Paid)'
+                flow = 'INFLOW'
             elif s.invoice.amount_paid > Decimal('0.00'):
-                mode = 'अर्धवट जमा'
+                flow = 'PARTIAL'
+                p_first = s.invoice.payments.first()
+                mode = p_first.get_payment_mode_display() if p_first else 'अर्धवट जमा'
+                status_txt = f"जमा ₹{s.invoice.amount_paid|floatformat:0} / बाकी ₹{s.invoice.balance_due|floatformat:0}"
             else:
+                flow = 'CREDIT'
                 mode = 'उधार (बाकी)'
+                status_txt = 'बाकी (Unpaid)'
+
         daybook_entries.append({
             'time': s.created_at,
             'type': 'SALE',
             'type_label': 'धान्य/पीठ विक्री',
             'voucher_no': s.sale_number,
             'party': s.customer.name,
-            'amount': s.total,
-            'flow': 'INFLOW',
+            'amount': amt,
+            'flow': flow,
             'mode': mode,
-            'status': 'विक्री'
+            'status': status_txt
         })
-    for p in Payment.objects.filter(payment_date=today).select_related('customer')[:8]:
+
+    # 10c. Standalone & Khata Lump-sum Payments (exclude payments already tied to today's sales/orders to prevent double counting)
+    today_sale_inv_ids = set(Sale.objects.filter(sale_date=today).values_list('invoice__id', flat=True))
+    today_grind_inv_ids = set(Invoice.objects.filter(grinding_order__order_date__date=today).values_list('id', flat=True))
+    linked_inv_ids = today_sale_inv_ids.union(today_grind_inv_ids)
+
+    for p in Payment.objects.filter(payment_date=today).exclude(invoice_id__in=linked_inv_ids).select_related('customer')[:10]:
         daybook_entries.append({
             'time': p.created_at,
             'type': 'PAYMENT',
-            'type_label': 'रक्कम जमा (Inflow)',
+            'type_label': 'खाते जमा (Khata Inflow)',
             'voucher_no': f"PAY-{p.id}",
             'party': p.customer.name if p.customer else 'ग्राहक',
             'amount': p.amount,
@@ -208,11 +238,13 @@ def dashboard_view(request):
             'mode': p.get_payment_mode_display(),
             'status': 'जमा'
         })
-    for e in Expense.objects.filter(expense_date=today)[:8]:
+
+    # 10d. Expenses (Outflow)
+    for e in Expense.objects.filter(expense_date=today)[:10]:
         daybook_entries.append({
             'time': e.created_at,
             'type': 'EXPENSE',
-            'type_label': 'खर्च (Outflow)',
+            'type_label': 'दुकान खर्च (Expense)',
             'voucher_no': f"EXP-{e.id}",
             'party': e.get_category_display(),
             'amount': e.amount,

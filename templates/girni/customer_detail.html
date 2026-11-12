@@ -83,7 +83,39 @@
     <div class="tab-content" id="customerTabContent">
         <!-- Grinding Orders Tab -->
         <div class="tab-pane fade show active" id="grinding">
-            <div class="card shadow-sm border-0">
+            <!-- Mobile Grinding Cards (R01) -->
+            <div class="d-block d-md-none">
+                {% for ord in grinding_orders %}
+                    <div class="card shadow-sm border mb-2.5 rounded-3 bg-white">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-secondary-subtle text-dark fs-6">#{{ ord.token_number|default:ord.order_number }}</span>
+                                <span class="badge bg-light text-dark border">{{ ord.get_status_display }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold fs-6 text-dark">{{ ord.grain.display_name }}</span>
+                                <span class="fw-bold text-primary fs-5">₹{{ ord.charges|floatformat:2 }}</span>
+                            </div>
+                            <div class="small text-muted mb-2">
+                                <span>वजन: <strong>{{ ord.input_kg|floatformat:2 }} KG</strong></span> &bull;
+                                <span>{{ ord.order_date|date:"d M Y, h:i A" }}</span>
+                            </div>
+                            <div class="d-flex justify-content-end border-top pt-2">
+                                <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-outline-primary btn-sm py-1 px-3">
+                                    {{ tr.view }} &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-4 text-muted bg-white rounded border">
+                        कोणत्याही दळण नोंदी नाहीत.
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Desktop Grinding Table (R01) -->
+            <div class="card shadow-sm border-0 d-none d-md-block">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 small">
                         <thead class="table-light">
@@ -123,7 +155,37 @@
 
         <!-- Sales Tab -->
         <div class="tab-pane fade" id="sales">
-            <div class="card shadow-sm border-0">
+            <!-- Mobile Sales Cards (R01) -->
+            <div class="d-block d-md-none">
+                {% for s in sales %}
+                    <div class="card shadow-sm border mb-2.5 rounded-3 bg-white">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-dark fs-6">{{ s.sale_number }}</span>
+                                <span class="badge bg-success-subtle text-success">{{ s.get_status_display }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="text-muted small">{{ s.sale_date|date:"d M Y" }}</span>
+                                <span class="fw-bold text-success fs-5">₹{{ s.total|floatformat:2 }}</span>
+                            </div>
+                            {% if s.invoice %}
+                                <div class="d-flex justify-content-end border-top pt-2">
+                                    <a href="{% url 'invoice_detail' s.invoice.id %}" class="btn btn-outline-primary btn-sm py-1 px-3">
+                                        {{ tr.view }} &rarr;
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-4 text-muted bg-white rounded border">
+                        कोणत्याही विक्री नोंदी नाहीत.
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Desktop Sales Table (R01) -->
+            <div class="card shadow-sm border-0 d-none d-md-block">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 small">
                         <thead class="table-light">
@@ -161,7 +223,39 @@
 
         <!-- Invoices Tab -->
         <div class="tab-pane fade" id="invoices">
-            <div class="card shadow-sm border-0">
+            <!-- Mobile Invoices Cards (R01) -->
+            <div class="d-block d-md-none">
+                {% for inv in invoices %}
+                    <div class="card shadow-sm border mb-2.5 rounded-3 bg-white">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-dark fs-6">{{ inv.invoice_number }}</span>
+                                <span class="badge bg-light text-dark border">{{ inv.get_status_display }}</span>
+                            </div>
+                            <div class="small text-muted mb-2">
+                                <span>तारीख: {{ inv.invoice_date|date:"d M Y" }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded mb-2 small">
+                                <div>एकूण: <strong>₹{{ inv.total|floatformat:2 }}</strong></div>
+                                <div>जमा: <strong class="text-success">₹{{ inv.amount_paid|floatformat:2 }}</strong></div>
+                                <div>बाकी: <strong class="{% if inv.balance_due > 0 %}text-danger{% else %}text-muted{% endif %}">₹{{ inv.balance_due|floatformat:2 }}</strong></div>
+                            </div>
+                            <div class="d-flex justify-content-end border-top pt-2">
+                                <a href="{% url 'invoice_detail' inv.id %}" class="btn btn-outline-primary btn-sm py-1 px-3">
+                                    {{ tr.view }} &rarr;
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-4 text-muted bg-white rounded border">
+                        कोणतीही बिले नाहीत.
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Desktop Invoices Table (R01) -->
+            <div class="card shadow-sm border-0 d-none d-md-block">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0 small">
                         <thead class="table-light">

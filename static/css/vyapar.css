@@ -474,3 +474,34 @@ body {
     display: block;
     margin: 0 auto;
 }
+
+/* Mobile Responsive Item Form Rows (R03) */
+@media (max-width: 767.98px) {
+    #itemsTable, #itemsTable thead, #itemsTable tbody, #itemsTable th, #itemsTable td, #itemsTable tr {
+        display: block;
+        width: 100% !important;
+    }
+    #itemsTable thead tr {
+        display: none !important;
+    }
+    #itemsTable tr.item-row {
+        border: 1px solid #CBD5E1;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #F8FAFC;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    #itemsTable td {
+        border: none !important;
+        padding: 4px 0 !important;
+        min-width: 100% !important;
+    }
+    #itemsTable td.line-total {
+        font-size: 1.15rem !important;
+        text-align: right !important;
+        padding-top: 8px !important;
+        border-top: 1px dashed #CBD5E1 !important;
+        margin-top: 6px;
+    }
+}

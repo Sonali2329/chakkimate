@@ -90,7 +90,7 @@
                         <span class="fs-5 fw-bold text-primary">₹{{ purchase.total|floatformat:2 }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2">
-                        <span class="text-muted">{{ tr.amount_paid }}:</span>
+                        <span class="text-muted">{% if current_lang == 'mr' %}दिलेली रक्कम (Amount Paid):{% else %}Amount Paid:{% endif %}</span>
                         <span class="fw-semibold text-success">₹{{ purchase.amount_paid|floatformat:2 }}</span>
                     </div>
                     <div class="d-flex justify-content-between border-top pt-2">

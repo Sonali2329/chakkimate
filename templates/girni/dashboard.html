@@ -320,7 +320,66 @@
                 {{ today|date:"d F Y" }}
             </span>
         </div>
-        <div class="table-responsive">
+
+        <!-- Mobile Card Feed for Daybook (R01) -->
+        <div class="d-block d-md-none p-3">
+            {% for db in daybook_entries %}
+                <div class="card shadow-sm border mb-2 rounded-3 bg-white">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-1.5">
+                            <div>
+                                <span class="fw-bold text-dark fs-6">#{{ db.voucher_no }}</span>
+                                <span class="text-muted small ms-1">&bull; {{ db.time|date:"h:i A" }}</span>
+                            </div>
+                            <div>
+                                {% if db.flow == 'INFLOW' %}
+                                    <span class="fw-bold text-success fs-6">+ ₹{{ db.amount|floatformat:2 }}</span>
+                                {% elif db.flow == 'OUTFLOW' %}
+                                    <span class="fw-bold text-danger fs-6">- ₹{{ db.amount|floatformat:2 }}</span>
+                                {% elif db.flow == 'CREDIT' %}
+                                    <span class="fw-bold text-warning-emphasis fs-6">₹{{ db.amount|floatformat:2 }} (बाकी)</span>
+                                {% elif db.flow == 'PARTIAL' %}
+                                    <span class="fw-bold text-primary fs-6">₹{{ db.amount|floatformat:2 }}</span>
+                                {% elif db.flow == 'VOID' %}
+                                    <span class="fw-bold text-muted text-decoration-line-through fs-6">₹{{ db.amount|floatformat:2 }}</span>
+                                {% else %}
+                                    <span class="fw-bold text-dark fs-6">₹{{ db.amount|floatformat:2 }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-semibold text-dark">{{ db.party }}</span>
+                            <span class="badge bg-light text-dark border small">{{ db.mode }}</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top small">
+                            <div>
+                                {% if db.type == 'GRINDING' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border"><i class="bi bi-fire me-1"></i>दळण मजुरी</span>
+                                {% elif db.type == 'SALE' %}
+                                    <span class="badge bg-primary-subtle text-primary border"><i class="bi bi-cart me-1"></i>धान्य/पीठ विक्री</span>
+                                {% elif db.type == 'PAYMENT' %}
+                                    <span class="badge bg-success-subtle text-success border"><i class="bi bi-cash me-1"></i>खाते जमा</span>
+                                {% elif db.type == 'EXPENSE' %}
+                                    <span class="badge bg-danger-subtle text-danger border"><i class="bi bi-dash me-1"></i>दुकान खर्च</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <span class="badge bg-light text-dark border">{{ db.status }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-4 text-muted">
+                    आज अद्याप कोणतेही व्यवहार नोंदवलेले नाहीत.
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Desktop Daybook Table (R01) -->
+        <div class="table-responsive d-none d-md-block">
             <table class="table-vyapar table-hover align-middle">
                 <thead>
                     <tr>
@@ -353,8 +412,20 @@
                             <td>
                                 <span class="badge bg-light text-dark border">{{ db.mode }}</span>
                             </td>
-                            <td class="text-end fw-bold fs-6 {% if db.flow == 'INFLOW' %}inflow-text{% else %}outflow-text{% endif %}">
-                                {% if db.flow == 'INFLOW' %}+ ₹{{ db.amount|floatformat:2 }}{% else %}- ₹{{ db.amount|floatformat:2 }}{% endif %}
+                            <td class="text-end fw-bold fs-6">
+                                {% if db.flow == 'INFLOW' %}
+                                    <span class="inflow-text">+ ₹{{ db.amount|floatformat:2 }}</span>
+                                {% elif db.flow == 'OUTFLOW' %}
+                                    <span class="outflow-text">- ₹{{ db.amount|floatformat:2 }}</span>
+                                {% elif db.flow == 'CREDIT' %}
+                                    <span class="text-warning-emphasis">₹{{ db.amount|floatformat:2 }} <small class="text-muted">(बाकी)</small></span>
+                                {% elif db.flow == 'PARTIAL' %}
+                                    <span class="text-primary">₹{{ db.amount|floatformat:2 }}</span>
+                                {% elif db.flow == 'VOID' %}
+                                    <span class="text-muted text-decoration-line-through">₹{{ db.amount|floatformat:2 }}</span>
+                                {% else %}
+                                    <span>₹{{ db.amount|floatformat:2 }}</span>
+                                {% endif %}
                             </td>
                             <td class="text-center">
                                 <span class="badge bg-light text-dark border">{{ db.status }}</span>
