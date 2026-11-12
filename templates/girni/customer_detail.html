@@ -47,9 +47,14 @@
                         ₹{{ customer.total_outstanding|floatformat:2 }}
                     </div>
                     {% if customer.total_outstanding > 0 %}
-                        <a href="https://wa.me/91{{ customer.mobile }}?text=नमस्कार%20{{ customer.name }}जी,%20{{ shop_settings.shop_name }}%20कडून%20आपले%20खात्यावर%20एकूण%20₹{{ customer.total_outstanding|floatformat:2 }}%20येणे%20बाकी%20आहे.%20कृपया%20लवकरात%20लवकर%20जमा%20करावे.%20धन्यवाद!" target="_blank" class="btn-whatsapp-vyapar mt-2 w-100 justify-content-center">
-                            <i class="bi bi-whatsapp"></i> व्हॉट्सॲपवर स्मरणपत्र पाठवा
-                        </a>
+                        <div class="d-flex flex-column gap-1 mt-2">
+                            <button type="button" class="btn btn-success fw-bold w-100" data-bs-toggle="modal" data-bs-target="#khataPaymentModal">
+                                <i class="bi bi-cash-coin me-1"></i> ₹ खाते जमा करा
+                            </button>
+                            <a href="https://wa.me/91{{ customer.mobile }}?text=नमस्कार%20{{ customer.name }}जी,%20{{ shop_settings.shop_name }}%20कडून%20आपले%20खात्यावर%20एकूण%20₹{{ customer.total_outstanding|floatformat:2 }}%20येणे%20बाकी%20आहे.%20कृपया%20लवकरात%20लवकर%20जमा%20करावे.%20धन्यवाद!" target="_blank" class="btn-whatsapp-vyapar w-100 justify-content-center">
+                                <i class="bi bi-whatsapp"></i> व्हॉट्सॲप स्मरणपत्र
+                            </a>
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -197,4 +202,56 @@
         </div>
     </div>
 </div>
+<!-- Modal: Customer Khata Payment (B21) -->
+<div class="modal fade" id="khataPaymentModal" tabindex="-1" aria-labelledby="khataPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold" id="khataPaymentModalLabel">
+                    <i class="bi bi-cash-coin me-1"></i> ग्राहक खाते जमा (Khata Payment)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'customer_khata_payment' customer.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-info py-2 small mb-3">
+                        ग्राहक: <strong>{{ customer.name }}</strong> | एकूण उधारी बाकी: <strong class="text-danger">₹{{ customer.total_outstanding|floatformat:2 }}</strong>
+                        <div class="text-muted mt-1" style="font-size: 0.72rem;">* जमा केलेली रक्कम आपोआप सर्वात जुन्या उधारी बिलांमध्ये समायोजित (Auto-allocate) होईल.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">जमा रक्कम (₹)</label>
+                        <input type="number" step="0.01" min="0.01" max="{{ customer.total_outstanding }}" name="amount" class="form-control form-control-lg fw-bold text-success" value="{{ customer.total_outstanding }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ tr.payment_mode }}</label>
+                        <select name="payment_mode" class="form-select">
+                            <option value="CASH">{{ tr.cash }}</option>
+                            <option value="UPI">{{ tr.upi }}</option>
+                            <option value="BANK_TRANSFER">{{ tr.bank_transfer }}</option>
+                            <option value="OTHER">{{ tr.other }}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">संदर्भ क्रमांक (UPI Txn ID / Cheque)</label>
+                        <input type="text" name="reference_number" class="form-control" placeholder="उदा. UPI-123456">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">टीप (Notes)</label>
+                        <input type="text" name="notes" class="form-control" placeholder="उदा. रोख जमा, दिवाळी हप्ता">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">रद्द करा</button>
+                    <button type="submit" class="btn btn-success px-4 fw-bold">₹ जमा नोंदवा</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

@@ -1,12 +1,28 @@
 # -*- coding: utf-8 -*-
 import io
+import os
 from decimal import Decimal
+from django.conf import settings as django_settings
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch, cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from .models import Invoice, ShopSettings
+
+# Register Noto Sans Devanagari font for 100% Marathi Unicode support
+FONT_NAME = 'Helvetica'
+FONT_NAME_BOLD = 'Helvetica-Bold'
+font_file = os.path.join(django_settings.BASE_DIR, 'static', 'fonts', 'NotoSansDevanagari.ttf')
+if os.path.exists(font_file):
+    try:
+        pdfmetrics.registerFont(TTFont('NotoDevanagari', font_file))
+        FONT_NAME = 'NotoDevanagari'
+        FONT_NAME_BOLD = 'NotoDevanagari'
+    except Exception as e:
+        print(f"Warning: Could not register NotoDevanagari font: {e}")
 
 def generate_invoice_pdf(invoice_id):
     """
@@ -28,34 +44,34 @@ def generate_invoice_pdf(invoice_id):
 
     styles = getSampleStyleSheet()
     
-    # Custom styles
+    # Custom styles using Devanagari font
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
-        fontSize=20,
-        leading=24,
+        fontSize=18,
+        leading=22,
         textColor=colors.HexColor('#1E3A8A'),
         alignment=1, # Center
-        fontName='Helvetica-Bold'
+        fontName=FONT_NAME_BOLD
     )
     
     subtitle_style = ParagraphStyle(
         'DocSubtitle',
         parent=styles['Normal'],
-        fontSize=10,
-        leading=14,
+        fontSize=9.5,
+        leading=13.5,
         textColor=colors.HexColor('#4B5563'),
         alignment=1,
-        fontName='Helvetica'
+        fontName=FONT_NAME
     )
 
     header_style = ParagraphStyle(
         'SectionHeader',
         parent=styles['Normal'],
-        fontSize=12,
-        leading=16,
+        fontSize=11,
+        leading=15,
         textColor=colors.HexColor('#1F2937'),
-        fontName='Helvetica-Bold'
+        fontName=FONT_NAME_BOLD
     )
 
     cell_style = ParagraphStyle(
@@ -63,7 +79,7 @@ def generate_invoice_pdf(invoice_id):
         parent=styles['Normal'],
         fontSize=9,
         leading=12,
-        fontName='Helvetica'
+        fontName=FONT_NAME
     )
 
     cell_bold = ParagraphStyle(
@@ -71,7 +87,7 @@ def generate_invoice_pdf(invoice_id):
         parent=styles['Normal'],
         fontSize=9,
         leading=12,
-        fontName='Helvetica-Bold'
+        fontName=FONT_NAME_BOLD
     )
 
     cell_right = ParagraphStyle(
@@ -80,7 +96,7 @@ def generate_invoice_pdf(invoice_id):
         fontSize=9,
         leading=12,
         alignment=2, # Right
-        fontName='Helvetica'
+        fontName=FONT_NAME
     )
 
     cell_right_bold = ParagraphStyle(
@@ -89,7 +105,7 @@ def generate_invoice_pdf(invoice_id):
         fontSize=9,
         leading=12,
         alignment=2, # Right
-        fontName='Helvetica-Bold'
+        fontName=FONT_NAME_BOLD
     )
 
     elements = []

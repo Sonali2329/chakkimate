@@ -1,48 +1,120 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3">
+<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-receipt text-primary me-1"></i> {% if current_lang == 'mr' %}सर्व बिले (Invoices){% else %}Invoices & Billing{% endif %}
+                <i class="bi bi-receipt text-primary me-2"></i>{% if current_lang == 'mr' %}सर्व बिले (Invoices){% else %}Invoices & Billing{% endif %}
             </h4>
             <span class="text-muted small">
                 {% if current_lang == 'mr' %}दळण व विक्री बिलांची संपूर्ण यादी व बाकी हिशोब{% else %}Sales & Grinding Invoices Ledger{% endif %}
             </span>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'sale_create' %}" class="btn btn-brand btn-sm">
+            <a href="{% url 'sale_create' %}" class="btn btn-primary btn-sm fw-semibold">
                 <i class="bi bi-bag-plus me-1"></i> + {{ tr.new_sale }}
             </a>
-            <a href="{% url 'grinding_order_create' %}" class="btn btn-wheat btn-sm">
+            <a href="{% url 'grinding_order_create' %}" class="btn btn-warning text-dark btn-sm fw-semibold">
                 <i class="bi bi-fire me-1"></i> + {{ tr.new_order }}
             </a>
         </div>
     </div>
 
-    <!-- Filter Pills -->
+    <!-- Filter Pills & Search -->
     <div class="card mb-3 shadow-sm border-0">
-        <div class="card-body py-2 px-3 d-flex flex-wrap gap-2 align-items-center">
-            <span class="text-muted small fw-semibold me-2"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
-            <a href="{% url 'invoice_list' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill">
-                {{ tr.all }}
-            </a>
-            <a href="{% url 'invoice_list' %}?status=PAID" class="btn btn-sm {% if status_filter == 'PAID' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill">
-                {{ tr.payment_paid }}
-            </a>
-            <a href="{% url 'invoice_list' %}?status=PARTIAL" class="btn btn-sm {% if status_filter == 'PARTIAL' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill">
-                {{ tr.payment_partial }}
-            </a>
-            <a href="{% url 'invoice_list' %}?status=UNPAID" class="btn btn-sm {% if status_filter == 'UNPAID' %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill">
-                {{ tr.payment_unpaid }}
-            </a>
+        <div class="card-body py-2 px-3">
+            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <div class="d-flex flex-wrap gap-1.5 align-items-center">
+                    <span class="text-muted small fw-semibold me-1"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
+                    <a href="{% url 'invoice_list' %}" class="btn btn-sm {% if not status_filter and not selected_type %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5">
+                        {{ tr.all }}
+                    </a>
+                    <a href="{% url 'invoice_list' %}?status=PAID" class="btn btn-sm {% if status_filter == 'PAID' %}btn-success{% else %}btn-outline-success{% endif %} rounded-pill px-2.5">
+                        {{ tr.payment_paid }}
+                    </a>
+                    <a href="{% url 'invoice_list' %}?status=PARTIAL" class="btn btn-sm {% if status_filter == 'PARTIAL' %}btn-warning text-dark{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-2.5">
+                        {{ tr.payment_partial }}
+                    </a>
+                    <a href="{% url 'invoice_list' %}?status=UNPAID" class="btn btn-sm {% if status_filter == 'UNPAID' %}btn-danger{% else %}btn-outline-danger{% endif %} rounded-pill px-2.5">
+                        {{ tr.payment_unpaid }}
+                    </a>
+                    <a href="{% url 'invoice_list' %}?status=CANCELLED" class="btn btn-sm {% if status_filter == 'CANCELLED' %}btn-secondary{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5">
+                        रद्द (Void)
+                    </a>
+                </div>
+                <form action="{% url 'invoice_list' %}" method="get" class="d-flex gap-1 mt-2 mt-md-0 w-100 w-md-auto">
+                    {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                    <div class="input-group input-group-sm w-100" style="max-width: 240px;">
+                        <input type="text" name="q" class="form-control" placeholder="बिल क्र./ग्राहक शोधा..." value="{{ search_query|default:'' }}">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Invoices Table -->
-    <div class="card shadow-sm border-0">
+    <!-- Mobile Card View (R01) -->
+    <div class="d-block d-md-none">
+        {% for inv in invoices %}
+            <div class="card shadow-sm border mb-2.5 rounded-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="fw-bold text-dark fs-6">{{ inv.invoice_number }}</span>
+                            <div class="text-muted small">{{ inv.invoice_date|date:"d M Y" }}</div>
+                        </div>
+                        <div>
+                            {% if inv.status == 'PAID' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">जमा (Paid)</span>
+                            {% elif inv.status == 'PARTIAL' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">अंशतः (Partial)</span>
+                            {% elif inv.status == 'CANCELLED' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">रद्द (Void)</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">बाकी (Unpaid)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="fw-bold text-dark">{{ inv.customer.name }}</div>
+                            <div class="text-muted small"><i class="bi bi-telephone text-primary"></i> {{ inv.customer.mobile }}</div>
+                        </div>
+                        <div>
+                            {% if inv.invoice_type == 'SALE' %}
+                                <span class="badge bg-primary-subtle text-primary border">विक्री / Sale</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border">दळण / Grinding</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div>
+                            <div class="fw-bold text-dark">एकूण: ₹{{ inv.total|floatformat:2 }}</div>
+                            <div class="small {% if inv.balance_due > 0 %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                बाकी: ₹{{ inv.balance_due|floatformat:2 }}
+                            </div>
+                        </div>
+                        <a href="{% url 'invoice_detail' inv.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                            बिल पहा <i class="bi bi-receipt ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card shadow-sm border p-4 text-center text-muted">
+                <i class="bi bi-receipt fs-1 d-block mb-2"></i>
+                <div class="fw-semibold">कोणतेही बिल सापडले नाही.</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Desktop Table View (R01) -->
+    <div class="card shadow-sm border-0 d-none d-md-block">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -86,6 +158,8 @@
                                     <span class="badge bg-success">{{ tr.payment_paid }}</span>
                                 {% elif inv.status == 'PARTIAL' %}
                                     <span class="badge bg-warning text-dark">{{ tr.payment_partial }}</span>
+                                {% elif inv.status == 'CANCELLED' %}
+                                    <span class="badge bg-danger">रद्द (Void)</span>
                                 {% else %}
                                     <span class="badge bg-danger">{{ tr.payment_unpaid }}</span>
                                 {% endif %}
@@ -99,8 +173,8 @@
                     {% empty %}
                         <tr>
                             <td colspan="9" class="text-center py-5 text-muted">
-                                <i class="bi bi-receipt-cutoff fs-2 d-block mb-2"></i>
-                                {% if current_lang == 'mr' %}कोणतीही बिले आढळली नाहीत.{% else %}No invoices found.{% endif %}
+                                <i class="bi bi-receipt fs-2 d-block mb-2"></i>
+                                कोणतीही बिले आढळली नाहीत.
                             </td>
                         </tr>
                     {% endfor %}
@@ -108,5 +182,27 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+        <div class="small text-muted">
+            पृष्ठ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} (एकूण {{ page_obj.paginator.count }})
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">&laquo; मागे</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; मागे</span></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">पुढे &raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">पुढे &raquo;</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

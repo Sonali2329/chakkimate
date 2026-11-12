@@ -1,26 +1,82 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3">
+<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-bag-check text-primary me-1"></i> {{ tr.grain_sales }}
+                <i class="bi bi-cart-check text-primary me-2"></i>{{ tr.grain_sales }}
             </h4>
             <span class="text-muted small">
-                {% if current_lang == 'mr' %}कच्चे धान्य व तयार पीठ विक्री बिलिंग{% else %}Grain & Flour Sales Billing Records{% endif %}
+                {% if current_lang == 'mr' %}कच्चे धान्य व तयार पीठ विक्री बिलिंग, पावती व खातावही{% else %}Grain & Flour Sales Billing Records & Receipts{% endif %}
             </span>
         </div>
         <div>
-            <a href="{% url 'sale_create' %}" class="btn btn-brand">
-                <i class="bi bi-plus-circle me-1"></i> + {{ tr.new_sale }}
+            <a href="{% url 'sale_create' %}" class="btn btn-primary fw-semibold shadow-sm w-100 text-center">
+                <i class="bi bi-plus-lg me-1"></i> + {{ tr.new_sale }}
             </a>
         </div>
     </div>
 
-    <!-- Sales Table -->
-    <div class="card shadow-sm border-0">
+    <!-- Mobile Card View (R01) -->
+    <div class="d-block d-md-none">
+        {% for s in sales %}
+            <div class="card shadow-sm border mb-2.5 rounded-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="fw-bold text-dark fs-6">{{ s.sale_number }}</span>
+                            <div class="text-muted small">{{ s.sale_date|date:"d M Y" }}</div>
+                        </div>
+                        <div>
+                            {% if s.status == 'COMPLETED' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">पूर्ण (Completed)</span>
+                            {% elif s.status == 'CANCELLED' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">रद्द (Cancelled)</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary rounded-pill">{{ s.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="fw-bold text-dark">{{ s.customer.name }}</div>
+                            <div class="text-muted small"><i class="bi bi-telephone text-primary"></i> {{ s.customer.mobile }}</div>
+                        </div>
+                        <span class="badge bg-light text-dark border px-2 py-1">
+                            {{ s.items.count }} वस्तू (Items)
+                        </span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div>
+                            <div class="fw-bold text-success fs-5">₹{{ s.total|floatformat:2 }}</div>
+                            {% if s.discount > 0 %}
+                                <div class="text-danger small" style="font-size: 0.72rem;">सूट: -₹{{ s.discount|floatformat:2 }}</div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            {% if s.invoice %}
+                                <a href="{% url 'invoice_detail' s.invoice.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                                    <i class="bi bi-receipt me-1"></i> बिल पहा
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card shadow-sm border p-4 text-center text-muted">
+                <i class="bi bi-bag-x fs-1 d-block mb-2"></i>
+                <div class="fw-semibold">कोणतीही विक्री नोंद सापडली नाही.</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Desktop Table View (R01) -->
+    <div class="card shadow-sm border-0 d-none d-md-block">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -56,7 +112,13 @@
                             <td class="text-end text-danger">{% if s.discount > 0 %}-₹{{ s.discount|floatformat:2 }}{% else %}-{% endif %}</td>
                             <td class="text-end fw-bold text-success fs-6">₹{{ s.total|floatformat:2 }}</td>
                             <td>
-                                <span class="badge bg-success-subtle text-success">{{ s.get_status_display }}</span>
+                                {% if s.status == 'COMPLETED' %}
+                                    <span class="badge bg-success-subtle text-success">पूर्ण</span>
+                                {% elif s.status == 'CANCELLED' %}
+                                    <span class="badge bg-danger-subtle text-danger">रद्द</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary">{{ s.get_status_display }}</span>
+                                {% endif %}
                             </td>
                             <td class="text-end">
                                 {% if s.invoice %}
@@ -78,5 +140,27 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+        <div class="small text-muted">
+            पृष्ठ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} (एकूण {{ page_obj.paginator.count }})
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo; मागे</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; मागे</span></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">पुढे &raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">पुढे &raquo;</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

@@ -1,12 +1,12 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3">
+<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-journal-text text-primary me-1"></i> {{ tr.stock_ledger }} (साठा नोंदवही)
+                <i class="bi bi-journal-text text-primary me-2"></i>{{ tr.stock_ledger }} (साठा नोंदवही)
             </h4>
             <span class="text-muted small">
                 {% if current_lang == 'mr' %}सर्व खरेदी, विक्री, उत्पादन आणि साठा हालचालींची ऑडिट नोंद{% else %}Auditable Stock In/Out Movement Ledger{% endif %}
@@ -16,7 +16,7 @@
             <a href="{% url 'stock_summary' %}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left me-1"></i> {{ tr.stock_inventory }}
             </a>
-            <a href="{% url 'stock_adjust' %}" class="btn btn-warning btn-sm">
+            <a href="{% url 'stock_adjust' %}" class="btn btn-warning btn-sm fw-bold">
                 <i class="bi bi-pencil-square me-1"></i> {{ tr.adjust_stock }}
             </a>
         </div>
@@ -31,7 +31,7 @@
                     <select name="product_id" class="form-select form-select-sm">
                         <option value="">-- {% if current_lang == 'mr' %}सर्व उत्पादने{% else %}All Products{% endif %} --</option>
                         {% for p in products %}
-                            <option value="{{ p.id }}" {% if selected_product == p.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ p.id }}" {% if selected_product == p.id %}selected{% endif %}>
                                 {{ p.display_name }} ({{ p.get_product_type_display }})
                             </option>
                         {% endfor %}
@@ -47,6 +47,7 @@
                         <option value="PRODUCTION_CONSUMED" {% if selected_movement == 'PRODUCTION_CONSUMED' %}selected{% endif %}>उत्पादनासाठी वापरलेले धान्य (Consumed Out)</option>
                         <option value="PRODUCTION_PRODUCED" {% if selected_movement == 'PRODUCTION_PRODUCED' %}selected{% endif %}>तयार झालेले पीठ (Produced In)</option>
                         <option value="ADJUSTMENT" {% if selected_movement == 'ADJUSTMENT' %}selected{% endif %}>साठा दुरुस्ती (Adjustment)</option>
+                        <option value="REVERSAL" {% if selected_movement == 'REVERSAL' %}selected{% endif %}>रद्द बिल साठा परतावा (Reversal)</option>
                     </select>
                 </div>
                 <div class="col-md-2 d-flex align-items-end mt-3">
@@ -58,8 +59,42 @@
         </div>
     </div>
 
-    <!-- Ledger Table -->
-    <div class="card shadow-sm border-0">
+    <!-- Mobile Card View (R01) -->
+    <div class="d-block d-md-none">
+        {% for m in movements %}
+            <div class="card shadow-sm border mb-2 rounded-3">
+                <div class="card-body p-2.5">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <div>
+                            <strong class="text-dark fs-6">{{ m.product.display_name }}</strong>
+                            <div class="text-muted small" style="font-size: 0.72rem;">{{ m.created_at|date:"d M Y, h:i A" }}</div>
+                        </div>
+                        <span class="badge {% if m.quantity_kg > 0 %}bg-success-subtle text-success{% else %}bg-danger-subtle text-danger{% endif %} fw-bold fs-6">
+                            {% if m.quantity_kg > 0 %}+{% endif %}{{ m.quantity_kg|floatformat:3 }} KG
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center small text-muted pt-1 border-top">
+                        <span>
+                            <span class="badge bg-light text-dark border">{{ m.get_movement_type_display }}</span>
+                            {% if m.reference_id %}<span class="badge bg-secondary-subtle text-dark">{{ m.reference_id }}</span>{% endif %}
+                        </span>
+                        <span class="fw-semibold text-dark">शिल्लक: {{ m.balance_after_kg|floatformat:2 }} KG</span>
+                    </div>
+                    {% if m.notes %}
+                        <div class="text-muted small mt-1" style="font-size: 0.72rem;">{{ m.notes }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="card shadow-sm border p-4 text-center text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                कोणतीही साठा नोंद सापडली नाही.
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Desktop Ledger Table (R01) -->
+    <div class="card shadow-sm border-0 d-none d-md-block">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light small">
@@ -119,5 +154,27 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+        <div class="small text-muted">
+            पृष्ठ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} (एकूण {{ page_obj.paginator.count }})
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_product %}&product_id={{ selected_product }}{% endif %}{% if selected_movement %}&movement_type={{ selected_movement }}{% endif %}">&laquo; मागे</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; मागे</span></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_product %}&product_id={{ selected_product }}{% endif %}{% if selected_movement %}&movement_type={{ selected_movement }}{% endif %}">पुढे &raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">पुढे &raquo;</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

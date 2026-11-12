@@ -1,15 +1,15 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4 animate-fade-in">
     <div class="row justify-content-center">
         <div class="col-md-7 col-lg-6">
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="fw-bold mb-0 text-dark">
-                        <i class="bi bi-cash-coin text-danger me-2"></i>नवीन खर्च नोंदवा
+                        <i class="bi bi-cash-coin text-danger me-2"></i>{% if action == 'Edit' %}खर्च दुरुस्त करा{% else %}नवीन खर्च नोंदवा{% endif %}
                     </h5>
-                    <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary btn-sm">
+                    <a href="{% url 'expense_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                         <i class="bi bi-arrow-left me-1"></i> {{ tr.cancel }}
                     </a>
                 </div>
@@ -18,51 +18,56 @@
                         {% csrf_token %}
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">{{ tr.expense_category }} (खर्चाचा प्रकार)</label>
+                            <label class="form-label fw-bold">{{ tr.expense_category }} (खर्चाचा प्रकार) <span class="text-danger">*</span></label>
                             <select name="category" class="form-select form-select-lg" required>
                                 {% for val, label in categories %}
-                                    <option value="{{ val }}">{{ label }}</option>
+                                    <option value="{{ val }}" {% if expense.category == val %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-bold">खर्च रक्कम (Amount ₹)</label>
+                            <label class="form-label fw-bold">खर्च रक्कम (Amount ₹) <span class="text-danger">*</span></label>
                             <div class="input-group input-group-lg">
                                 <span class="input-group-text">₹</span>
-                                <input type="number" step="0.01" min="1" name="amount" class="form-control fw-bold" placeholder="0.00" required autofocus>
+                                <input type="number" step="0.01" min="0.5" name="amount" class="form-control fw-bold" placeholder="0.00" value="{{ expense.amount|default:'' }}" required autofocus>
                             </div>
                         </div>
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">तारीख</label>
-                                <input type="date" name="expense_date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                                <input type="date" name="expense_date" class="form-control" value="{% if expense %}{{ expense.expense_date|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ tr.payment_mode }}</label>
                                 <select name="payment_mode" class="form-select">
-                                    <option value="CASH">{{ tr.cash }}</option>
-                                    <option value="UPI">{{ tr.upi }}</option>
-                                    <option value="BANK_TRANSFER">{{ tr.bank_transfer }}</option>
-                                    <option value="OTHER">{{ tr.other }}</option>
+                                    <option value="CASH" {% if expense.payment_mode == 'CASH' %}selected{% endif %}>{{ tr.cash }}</option>
+                                    <option value="UPI" {% if expense.payment_mode == 'UPI' %}selected{% endif %}>{{ tr.upi }}</option>
+                                    <option value="BANK_TRANSFER" {% if expense.payment_mode == 'BANK_TRANSFER' %}selected{% endif %}>{{ tr.bank_transfer }}</option>
+                                    <option value="OTHER" {% if expense.payment_mode == 'OTHER' %}selected{% endif %}>{{ tr.other }}</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">तपशील / कारण (Description)</label>
-                            <input type="text" name="description" class="form-control" placeholder="उदा. वीज बिल भरणा, बेल्ट बदलणे, इ." required>
+                            <label class="form-label fw-semibold">तपशील / कारण (Description) <span class="text-danger">*</span></label>
+                            <input type="text" name="description" class="form-control" placeholder="उदा. वीज बिल भरणा, बेल्ट बदलणे, इ." value="{{ expense.description|default:'' }}" required>
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">पावती फोटो / फाईल (Receipt - पर्यायी)</label>
-                            <input type="file" name="receipt_file" class="form-control">
+                            <label class="form-label fw-semibold">पावती फोटो / फाईल (Receipt - पर्यायी, कमाल 5MB)</label>
+                            <input type="file" name="receipt_file" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                            {% if expense.receipt_file %}
+                                <div class="small text-muted mt-1">
+                                    सध्याची फाईल: <a href="{{ expense.receipt_file.url }}" target="_blank">पावती पहा</a>
+                                </div>
+                            {% endif %}
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-danger btn-lg py-2">
-                                <i class="bi bi-check2-circle me-1"></i> खर्च नोंदवा (Save Expense)
+                            <button type="submit" class="btn btn-danger btn-lg py-2.5 fw-bold shadow-sm">
+                                <i class="bi bi-check2-circle me-1"></i> {% if action == 'Edit' %}बदल जतन करा{% else %}खर्च नोंदवा (Save Expense){% endif %}
                             </button>
                         </div>
                     </form>

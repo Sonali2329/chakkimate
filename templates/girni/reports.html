@@ -1,15 +1,15 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3">
+<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-bar-chart-line text-primary me-1"></i> {{ tr.reports }} (व्यवसाय अहवाल)
+                <i class="bi bi-bar-chart-line text-primary me-2"></i>{{ tr.reports }} (व्यवसाय अहवाल व नफा-तोटा)
             </h4>
             <span class="text-muted small">
-                {% if current_lang == 'mr' %}विक्री, दळण मजुरी, उत्पादन, खर्च आणि नफा-तोटा विश्लेषण{% else %}Business Analytics, Yield & Income vs Expense Reports{% endif %}
+                {% if current_lang == 'mr' %}विक्री, दळण मजुरी, धान्य खरेदी, खर्च आणि अचूक निव्वळ नफा विश्लेषण{% else %}Business Analytics, Yield & Income vs Expense Reports{% endif %}
             </span>
         </div>
         <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
@@ -30,7 +30,7 @@
                     <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
                 </div>
                 <div class="col-md-4 d-flex align-items-end mt-3">
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-primary w-100 fw-semibold">
                         <i class="bi bi-funnel me-1"></i> {{ tr.filter }} अहवाल पहा
                     </button>
                 </div>
@@ -38,43 +38,54 @@
         </div>
     </div>
 
-    <!-- Executive Financial Summary Cards (SRS 4.13) -->
+    <!-- Executive Financial Summary Cards (B25, SRS 4.13) -->
     <div class="row g-3 mb-4">
         <!-- 1. Total Sales Revenue -->
-        <div class="col-6 col-md-3">
-            <div class="border rounded p-3 bg-white shadow-sm">
-                <span class="text-muted small text-uppercase">धान्य व पीठ विक्री</span>
-                <div class="fs-3 fw-bold text-primary mt-1">₹{{ total_sales|floatformat:2 }}</div>
-                <div class="small text-muted">उत्पादनांची विक्री</div>
+        <div class="col-6 col-lg-2">
+            <div class="border rounded p-3 bg-white shadow-sm h-100">
+                <span class="text-muted small text-uppercase">१. विक्री उत्पन्न</span>
+                <div class="fs-4 fw-bold text-primary mt-1">₹{{ total_sales|floatformat:2 }}</div>
+                <div class="small text-muted" style="font-size: 0.72rem;">पीठ/धान्य विक्री</div>
             </div>
         </div>
 
         <!-- 2. Grinding Revenue -->
-        <div class="col-6 col-md-3">
-            <div class="border rounded p-3 bg-white shadow-sm">
-                <span class="text-muted small text-uppercase">दळण मजुरी जमा</span>
-                <div class="fs-3 fw-bold text-warning mt-1">₹{{ total_grinding|floatformat:2 }}</div>
-                <div class="small text-muted">{{ total_grinding_orders }} ऑर्डर्स पूर्ण</div>
+        <div class="col-6 col-lg-2">
+            <div class="border rounded p-3 bg-white shadow-sm h-100">
+                <span class="text-muted small text-uppercase">२. दळण मजुरी</span>
+                <div class="fs-4 fw-bold text-warning mt-1">₹{{ total_grinding|floatformat:2 }}</div>
+                <div class="small text-muted" style="font-size: 0.72rem;">{{ total_grinding_orders }} ऑर्डर्स</div>
             </div>
         </div>
 
-        <!-- 3. Operating Expenses -->
-        <div class="col-6 col-md-3">
-            <div class="border rounded p-3 bg-white shadow-sm">
-                <span class="text-muted small text-uppercase">एकूण खर्च (Expenses)</span>
-                <div class="fs-3 fw-bold text-danger mt-1">₹{{ total_expenses|floatformat:2 }}</div>
-                <div class="small text-muted">वीज, देखभाल, पगार इ.</div>
+        <!-- 3. Grain Purchases (COGS) -->
+        <div class="col-6 col-lg-2">
+            <div class="border rounded p-3 bg-white shadow-sm h-100">
+                <span class="text-muted small text-uppercase">३. धान्य खरेदी</span>
+                <div class="fs-4 fw-bold text-danger mt-1">₹{{ total_purchases|floatformat:2 }}</div>
+                <div class="small text-muted" style="font-size: 0.72rem;">कच्चा माल खरेदी</div>
             </div>
         </div>
 
-        <!-- 4. Net Profit / Income -->
-        <div class="col-6 col-md-3">
-            <div class="border rounded p-3 bg-white shadow-sm">
-                <span class="text-muted small text-uppercase">निव्वळ नफा (Net Income)</span>
+        <!-- 4. Operating Expenses -->
+        <div class="col-6 col-lg-2">
+            <div class="border rounded p-3 bg-white shadow-sm h-100">
+                <span class="text-muted small text-uppercase">४. दुकान खर्च</span>
+                <div class="fs-4 fw-bold text-danger mt-1">₹{{ total_expenses|floatformat:2 }}</div>
+                <div class="small text-muted" style="font-size: 0.72rem;">वीज, पगार, दुरुस्ती</div>
+            </div>
+        </div>
+
+        <!-- 5. Net Profit / Income -->
+        <div class="col-12 col-lg-4">
+            <div class="border rounded p-3 bg-white shadow-sm h-100 border-2 {% if net_profit >= 0 %}border-success{% else %}border-danger{% endif %}">
+                <span class="text-muted small text-uppercase fw-bold">५. निव्वळ नफा (Net Profit)</span>
                 <div class="fs-3 fw-bold {% if net_profit >= 0 %}text-success{% else %}text-danger{% endif %} mt-1">
                     ₹{{ net_profit|floatformat:2 }}
                 </div>
-                <div class="small text-muted">(एकूण महसूल - खर्च)</div>
+                <div class="small text-muted" style="font-size: 0.72rem;">
+                    = (विक्री + मजुरी) - (धान्य खरेदी + दुकान खर्च)
+                </div>
             </div>
         </div>
     </div>

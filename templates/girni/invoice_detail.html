@@ -20,9 +20,14 @@
             <a href="{{ whatsapp_url }}" target="_blank" class="btn btn-success btn-sm">
                 <i class="bi bi-whatsapp me-1"></i> {{ tr.share_whatsapp }}
             </a>
-            {% if invoice.balance_due > 0 %}
+            {% if invoice.balance_due > 0 and invoice.status != 'CANCELLED' %}
                 <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal">
                     <i class="bi bi-cash-coin me-1"></i> + {% if current_lang == 'mr' %}पेमेंट जमा करा{% else %}Record Payment{% endif %}
+                </button>
+            {% endif %}
+            {% if invoice.status != 'CANCELLED' %}
+                <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#voidInvoiceModal">
+                    <i class="bi bi-x-octagon me-1"></i> बिल रद्द करा (Void)
                 </button>
             {% endif %}
         </div>
@@ -275,6 +280,38 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Void Invoice (B21) -->
+{% if invoice.status != 'CANCELLED' %}
+<div class="modal fade" id="voidInvoiceModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> बिल रद्द करा (Void Bill)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'void_invoice' invoice.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-danger py-2 small">
+                        <strong>सावधान:</strong> बिल #{{ invoice.invoice_number }} रद्द केल्यास उर्वरित बाकी ₹0 होईल आणि विक्री केलेला धान्याचा साठा आपोआप गोदामात पूर्ववत (Restored) होईल.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">बिल रद्द करण्याचे कारण (Reason)</label>
+                        <textarea name="reason" class="form-control" rows="2" placeholder="उदा. चुकीची नोंद / ग्राहकाने माल परत केला" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">मागे जा</button>
+                    <button type="submit" class="btn btn-danger px-4">होय, बिल रद्द करा</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <script>
     function printThermal() {

@@ -122,7 +122,56 @@
                         + नवीन दळण (F2)
                     </a>
                 </div>
-                <div class="table-responsive">
+                <!-- Mobile Card Feed for Grinding Queue (R01) -->
+                <div class="d-block d-md-none p-2">
+                    {% for ord in pending_orders %}
+                        <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-sm">
+                            <div class="d-flex justify-content-between align-items-center mb-1.5">
+                                <div class="d-flex align-items-center gap-1.5">
+                                    <span class="badge bg-dark text-white fw-bold px-2 py-0.5 rounded-pill">#{{ ord.token_number|default:ord.order_number }}</span>
+                                    <strong class="text-dark">{{ ord.customer.name }}</strong>
+                                </div>
+                                <div>
+                                    {% if ord.status == 'PENDING' %}
+                                        <span class="badge bg-warning text-dark">प्रलंबित</span>
+                                    {% elif ord.status == 'IN_PROGRESS' %}
+                                        <span class="badge bg-primary text-white">चालू</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center small text-muted mb-2">
+                                <span>{{ ord.grain.display_name }} ({{ ord.input_kg|floatformat:2 }} KG)</span>
+                                <span class="fw-bold text-primary">₹{{ ord.charges|floatformat:2 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-1.5 border-top">
+                                <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-sm btn-outline-secondary py-1 px-2.5">
+                                    <i class="bi bi-eye"></i> पहा
+                                </a>
+                                {% if ord.status == 'PENDING' %}
+                                    <form method="post" action="{% url 'grinding_order_status' ord.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="IN_PROGRESS">
+                                        <button type="submit" class="btn btn-sm btn-primary py-1 px-3 fw-bold">
+                                            <i class="bi bi-play-fill"></i> सुरू करा
+                                        </button>
+                                    </form>
+                                {% elif ord.status == 'IN_PROGRESS' %}
+                                    <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-sm btn-success py-1 px-3 fw-bold">
+                                        <i class="bi bi-check-lg"></i> पूर्ण करा
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-4 text-muted small">
+                            <i class="bi bi-check-circle-fill text-success fs-3 d-block mb-1"></i>
+                            सर्व दळण कामे पूर्ण झाली आहेत! सध्या कोणतेही दळण प्रलंबित नाही.
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Desktop Table View -->
+                <div class="d-none d-md-block table-responsive">
                     <table class="table-vyapar table-hover align-middle">
                         <thead>
                             <tr>
@@ -174,13 +223,9 @@
                                                     </button>
                                                 </form>
                                             {% elif ord.status == 'IN_PROGRESS' %}
-                                                <form method="post" action="{% url 'grinding_order_status' ord.id %}" class="d-inline">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="status" value="COMPLETED">
-                                                    <button type="submit" class="btn btn-success" title="पूर्ण झाले">
-                                                        तयार
-                                                    </button>
-                                                </form>
+                                                <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-success" title="पूर्ण झाले">
+                                                    तयार
+                                                </a>
                                             {% endif %}
                                         </div>
                                     </td>
@@ -247,9 +292,16 @@
                         </div>
                     {% endif %}
 
-                    <!-- Quick Chart -->
+                    <!-- Quick Chart (B35) -->
                     <div class="mt-3">
-                        <canvas id="weeklyMiniChart" height="110"></canvas>
+                        {% if sales_chart_has_data %}
+                            <canvas id="weeklyMiniChart" height="110"></canvas>
+                        {% else %}
+                            <div class="text-center py-3 text-muted small bg-light rounded border border-dashed">
+                                <i class="bi bi-bar-chart fs-5 d-block mb-1 text-muted opacity-50"></i>
+                                गेल्या ७ दिवसांत अद्याप विक्री व्यवहार नाहीत.
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

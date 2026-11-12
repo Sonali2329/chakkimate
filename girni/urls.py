@@ -16,6 +16,7 @@ urlpatterns = [
     path('customers/new/', views.customer_create_view, name='customer_create'),
     path('customers/<int:customer_id>/', views.customer_detail_view, name='customer_detail'),
     path('customers/<int:customer_id>/edit/', views.customer_edit_view, name='customer_edit'),
+    path('customers/<int:customer_id>/pay/', views.customer_khata_payment_view, name='customer_khata_payment'),
 
     # Suppliers
     path('suppliers/', views.supplier_list_view, name='supplier_list'),
@@ -32,6 +33,7 @@ urlpatterns = [
     path('purchases/', views.purchase_list_view, name='purchase_list'),
     path('purchases/new/', views.purchase_create_view, name='purchase_create'),
     path('purchases/<int:purchase_id>/', views.purchase_detail_view, name='purchase_detail'),
+    path('purchases/<int:purchase_id>/pay/', views.supplier_payment_view, name='supplier_payment'),
 
     # Stock & Inventory
     path('stock/', views.stock_summary_view, name='stock_summary'),
@@ -56,18 +58,22 @@ urlpatterns = [
     path('invoices/', views.invoice_list_view, name='invoice_list'),
     path('invoices/<int:invoice_id>/', views.invoice_detail_view, name='invoice_detail'),
     path('invoices/<int:invoice_id>/pdf/', views.invoice_pdf_view, name='invoice_pdf'),
+    path('invoices/<int:invoice_id>/void/', views.void_invoice_view, name='void_invoice'),
     path('payments/', views.payment_list_view, name='payment_list'),
     path('payments/record/', views.record_payment_view, name='record_payment'),
 
     # Expenses
     path('expenses/', views.expense_list_view, name='expense_list'),
     path('expenses/new/', views.expense_create_view, name='expense_create'),
+    path('expenses/<int:expense_id>/edit/', views.expense_edit_view, name='expense_edit'),
+    path('expenses/<int:expense_id>/delete/', views.expense_delete_view, name='expense_delete'),
 
     # Reports
     path('reports/', views.reports_view, name='reports'),
 
-    # Settings
+    # Settings & Security
     path('settings/', views.shop_settings_view, name='shop_settings'),
+    path('settings/password/', views.password_change_view, name='password_change'),
 
     # PWA Endpoints
     path('manifest.json', views.manifest_view, name='pwa_manifest'),

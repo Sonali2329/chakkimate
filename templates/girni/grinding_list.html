@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
         <div>
             <h4 class="fw-bold mb-1 text-dark">
                 <i class="bi bi-fire text-warning me-2"></i>{{ tr.grinding_orders }}
@@ -13,36 +13,120 @@
             </span>
         </div>
         <div>
-            <a href="{% url 'grinding_order_create' %}" class="btn-gold-premium text-decoration-none shadow-sm">
+            <a href="{% url 'grinding_order_create' %}" class="btn-gold-premium text-decoration-none shadow-sm w-100 text-center">
                 <i class="bi bi-plus-lg"></i> + {{ tr.new_order }}
             </a>
         </div>
     </div>
 
-    <!-- Filter Pills -->
-    <div class="card-premium mb-4">
-        <div class="card-body py-2.5 px-3 d-flex flex-wrap gap-2 align-items-center">
-            <span class="text-muted small fw-bold me-2"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
-            <a href="{% url 'grinding_order_list' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-3 fw-semibold">
-                {{ tr.all }}
-            </a>
-            <a href="{% url 'grinding_order_list' %}?status=PENDING" class="btn btn-sm {% if status_filter == 'PENDING' %}btn-warning text-dark fw-bold{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-3">
-                <i class="bi bi-hourglass-split me-1"></i> {{ tr.status_pending }}
-            </a>
-            <a href="{% url 'grinding_order_list' %}?status=IN_PROGRESS" class="btn btn-sm {% if status_filter == 'IN_PROGRESS' %}btn-primary fw-bold{% else %}btn-outline-primary{% endif %} rounded-pill px-3">
-                <i class="bi bi-play-circle me-1"></i> {{ tr.status_in_progress }}
-            </a>
-            <a href="{% url 'grinding_order_list' %}?status=COMPLETED" class="btn btn-sm {% if status_filter == 'COMPLETED' %}btn-success fw-bold{% else %}btn-outline-success{% endif %} rounded-pill px-3">
-                <i class="bi bi-check-circle me-1"></i> {{ tr.status_completed }}
-            </a>
-            <a href="{% url 'grinding_order_list' %}?status=DELIVERED" class="btn btn-sm {% if status_filter == 'DELIVERED' %}btn-info text-white fw-bold{% else %}btn-outline-info{% endif %} rounded-pill px-3">
-                <i class="bi bi-box2-check me-1"></i> {{ tr.status_delivered }}
-            </a>
+    <!-- Filter Pills & Search -->
+    <div class="card-premium mb-3">
+        <div class="card-body py-2.5 px-3">
+            <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                <div class="d-flex flex-wrap gap-1.5 align-items-center">
+                    <span class="text-muted small fw-bold me-1"><i class="bi bi-funnel me-1"></i>{{ tr.filter }}:</span>
+                    <a href="{% url 'grinding_order_list' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-3 fw-semibold">
+                        {{ tr.all }}
+                    </a>
+                    <a href="{% url 'grinding_order_list' %}?status=PENDING" class="btn btn-sm {% if status_filter == 'PENDING' %}btn-warning text-dark fw-bold{% else %}btn-outline-warning text-dark{% endif %} rounded-pill px-2.5">
+                        <i class="bi bi-hourglass-split me-1"></i> {{ tr.status_pending }}
+                    </a>
+                    <a href="{% url 'grinding_order_list' %}?status=IN_PROGRESS" class="btn btn-sm {% if status_filter == 'IN_PROGRESS' %}btn-primary fw-bold{% else %}btn-outline-primary{% endif %} rounded-pill px-2.5">
+                        <i class="bi bi-play-circle me-1"></i> {{ tr.status_in_progress }}
+                    </a>
+                    <a href="{% url 'grinding_order_list' %}?status=COMPLETED" class="btn btn-sm {% if status_filter == 'COMPLETED' %}btn-success fw-bold{% else %}btn-outline-success{% endif %} rounded-pill px-2.5">
+                        <i class="bi bi-check-circle me-1"></i> {{ tr.status_completed }}
+                    </a>
+                    <a href="{% url 'grinding_order_list' %}?status=DELIVERED" class="btn btn-sm {% if status_filter == 'DELIVERED' %}btn-info text-white fw-bold{% else %}btn-outline-info{% endif %} rounded-pill px-2.5">
+                        <i class="bi bi-box2-check me-1"></i> {{ tr.status_delivered }}
+                    </a>
+                </div>
+                <form action="{% url 'grinding_order_list' %}" method="get" class="d-flex gap-1 mt-2 mt-md-0 w-100 w-md-auto">
+                    {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+                    <div class="input-group input-group-sm w-100" style="max-width: 260px;">
+                        <input type="text" name="q" class="form-control" placeholder="टोकन / ग्राहक शोधा..." value="{{ search_query|default:'' }}">
+                        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Orders Table -->
-    <div class="card-premium">
+    <!-- Mobile Card View (Phone Only, R01) -->
+    <div class="d-block d-md-none">
+        {% for ord in orders %}
+            <div class="card shadow-sm border mb-2.5 rounded-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-dark text-white fw-bold px-2 py-1 fs-6 rounded-pill">
+                                #{{ ord.token_number|default:ord.order_number }}
+                            </span>
+                            <div>
+                                <div class="fw-bold text-dark fs-6">{{ ord.customer.name }}</div>
+                                <div class="text-muted small" style="font-size: 0.75rem;">
+                                    <i class="bi bi-telephone text-primary"></i> {{ ord.customer.mobile }}
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            {% if ord.status == 'PENDING' %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>प्रतीक्षेत</span>
+                            {% elif ord.status == 'IN_PROGRESS' %}
+                                <span class="badge bg-primary text-white"><i class="bi bi-play-circle me-1"></i>चालू आहे</span>
+                            {% elif ord.status == 'COMPLETED' %}
+                                <span class="badge bg-success text-white"><i class="bi bi-check-circle me-1"></i>तयार आहे</span>
+                            {% elif ord.status == 'DELIVERED' %}
+                                <span class="badge bg-secondary text-white"><i class="bi bi-box2-check me-1"></i>दिले</span>
+                            {% elif ord.status == 'CANCELLED' %}
+                                <span class="badge bg-danger text-white"><i class="bi bi-x-circle me-1"></i>रद्द</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="bg-light p-2 rounded-2 d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span class="fw-bold text-dark">{{ ord.grain.display_name }}</span>
+                            <span class="text-muted small">({{ ord.get_ownership_type_display }})</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="fw-bold fs-6 text-dark">{{ ord.input_kg|floatformat:2 }} KG</span>
+                            <div class="text-muted" style="font-size: 0.72rem;">@ ₹{{ ord.rate_per_kg|floatformat:2 }}/KG</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-1 border-top">
+                        <div>
+                            <span class="fw-bold text-primary fs-5">₹{{ ord.charges|floatformat:2 }}</span>
+                            {% if ord.is_paid %}
+                                <span class="badge bg-success-subtle text-success ms-1">जमा (Paid)</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger ms-1">बाकी (Due)</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex gap-1.5">
+                            {% if ord.status == 'COMPLETED' %}
+                                <a href="https://wa.me/91{{ ord.customer.mobile }}?text=नमस्कार%20{{ ord.customer.name|urlencode }}%20जी,%20{{ shop_settings.shop_name|urlencode }}%20कडून%20कळविण्यात%20आनंद%20होत%20आहे%20की%20आपले%20{{ ord.input_kg|floatformat:2 }}%20किलो%20{{ ord.grain.display_name|urlencode }}%20चे%20दळण%20तयार%20झाले%20आहे.%20टोकन%20क्र:%20{{ ord.token_number|default:ord.order_number }}.%20एकूण%20मजुरी:%20₹{{ ord.charges|floatformat:2 }}.%20कृपया%20घेऊन%20जावे.%20धन्यवाद!" target="_blank" class="btn btn-sm btn-success rounded-pill px-2.5" title="WhatsApp वर कळवा">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'grinding_order_detail' ord.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                                तपशील <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card shadow-sm border p-4 text-center text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                <div class="fw-semibold">कोणत्याही दळण ऑर्डर्स सापडल्या नाहीत.</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Desktop Data Table View (Tablet & PC Only, R01) -->
+    <div class="card-premium d-none d-md-block">
         <div class="table-responsive">
             <table class="table-premium table-hover align-middle">
                 <thead>
@@ -157,5 +241,27 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination Controls (Both Mobile & Desktop) -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+        <div class="small text-muted">
+            पृष्ठ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} (एकूण {{ page_obj.paginator.count }})
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">&laquo; मागे</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; मागे</span></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}">पुढे &raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">पुढे &raquo;</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

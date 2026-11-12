@@ -6,9 +6,16 @@
         <a href="{% url 'purchase_list' %}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i> {{ tr.purchases }}
         </a>
-        <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
-            <i class="bi bi-printer me-1"></i> {{ tr.print_invoice }}
-        </button>
+        <div class="d-flex gap-2">
+            {% if purchase.balance_due > 0 %}
+                <button type="button" class="btn btn-primary btn-sm fw-bold" data-bs-toggle="modal" data-bs-target="#supplierPaymentModal">
+                    <i class="bi bi-cash-coin me-1"></i> + पेमेंट द्या
+                </button>
+            {% endif %}
+            <button onclick="window.print()" class="btn btn-outline-dark btn-sm">
+                <i class="bi bi-printer me-1"></i> {{ tr.print_invoice }}
+            </button>
+        </div>
     </div>
 
     <div class="card shadow-sm border-0 p-4 bg-white">
@@ -105,4 +112,57 @@
         {% endif %}
     </div>
 </div>
+<!-- Modal: Pay Supplier (B21) -->
+{% if purchase.balance_due > 0 %}
+<div class="modal fade" id="supplierPaymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-cash-coin me-1"></i> पुरवठादाराला पेमेंट द्या (Pay Supplier)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'supplier_payment' purchase.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="alert alert-warning py-2 small mb-3">
+                        पुरवठादार: <strong>{{ purchase.supplier.name }}</strong> | शिल्लक देय बाकी: <strong class="text-danger">₹{{ purchase.balance_due|floatformat:2 }}</strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">पेमेंट रक्कम (₹)</label>
+                        <input type="number" step="0.01" min="0.01" max="{{ purchase.balance_due }}" name="amount" class="form-control form-control-lg fw-bold" value="{{ purchase.balance_due }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">{{ tr.payment_mode }}</label>
+                        <select name="payment_mode" class="form-select">
+                            <option value="CASH">{{ tr.cash }}</option>
+                            <option value="UPI">{{ tr.upi }}</option>
+                            <option value="BANK_TRANSFER">{{ tr.bank_transfer }}</option>
+                            <option value="OTHER">{{ tr.other }}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">संदर्भ क्रमांक (Txn ID / Cheque)</label>
+                        <input type="text" name="reference_number" class="form-control" placeholder="उदा. UTR-987654">
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold">टीप (Notes)</label>
+                        <input type="text" name="notes" class="form-control" placeholder="तपशील...">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">रद्द करा</button>
+                    <button type="submit" class="btn btn-primary px-4 fw-bold">पेमेंट नोंदवा</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

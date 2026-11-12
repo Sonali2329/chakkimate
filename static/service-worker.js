@@ -1,8 +1,7 @@
 // ChakkiMate (चक्कीमेट) - Progressive Web App Service Worker
-const CACHE_NAME = 'chakkimate-v1.0';
+const CACHE_NAME = 'chakkimate-v2.1';
 
 const PRECACHE_ASSETS = [
-  '/',
   '/offline/',
   '/static/manifest.json',
   '/static/icons/icon-192.png',

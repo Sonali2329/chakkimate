@@ -219,36 +219,43 @@
                         </div>
                     {% endif %}
 
-                    <div class="fw-bold small text-muted mb-2">{% if current_lang == 'mr' %}जलद स्थिती बदल:{% else %}Quick Transitions:{% endif %}</div>
+                    <!-- Workflow Step-by-Step Controller (B06, B07) -->
+                    <div class="fw-bold small text-muted mb-2">पुढील कृती (Next Action):</div>
                     <div class="d-grid gap-2">
                         {% if order.status == 'PENDING' %}
                             <form method="post" action="{% url 'grinding_order_status' order.id %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="status" value="IN_PROGRESS">
-                                <button type="submit" class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-play-circle me-1"></i> {% if current_lang == 'mr' %}दळणे सुरू करा (Start Grinding){% else %}Start Grinding{% endif %}
+                                <button type="submit" class="btn btn-primary py-2.5 w-100 fw-bold">
+                                    <i class="bi bi-play-circle me-1"></i> दळणे सुरू करा (Start Grinding)
                                 </button>
                             </form>
-                        {% endif %}
-
-                        {% if order.status == 'IN_PROGRESS' or order.status == 'PENDING' %}
-                            <form method="post" action="{% url 'grinding_order_status' order.id %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="status" value="COMPLETED">
-                                <button type="submit" class="btn btn-outline-success w-100">
-                                    <i class="bi bi-check2-circle me-1"></i> {{ tr.mark_completed }}
-                                </button>
-                            </form>
-                        {% endif %}
-
-                        {% if order.status != 'DELIVERED' and order.status != 'CANCELLED' %}
+                            <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-2" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                                <i class="bi bi-x-circle me-1"></i> ऑर्डर रद्द करा (Cancel)
+                            </button>
+                        {% elif order.status == 'IN_PROGRESS' %}
+                            <button type="button" class="btn btn-success py-2.5 w-100 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#completeOrderModal">
+                                <i class="bi bi-check2-circle me-1"></i> दळण पूर्ण झाले (Mark Completed)
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm w-100 mt-2" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                                <i class="bi bi-x-circle me-1"></i> ऑर्डर रद्द करा (Cancel)
+                            </button>
+                        {% elif order.status == 'COMPLETED' %}
                             <form method="post" action="{% url 'grinding_order_status' order.id %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="status" value="DELIVERED">
-                                <button type="submit" class="btn btn-success w-100">
-                                    <i class="bi bi-box-seam me-1"></i> {{ tr.mark_delivered }}
+                                <button type="submit" class="btn btn-info text-white py-2.5 w-100 fw-bold shadow-sm">
+                                    <i class="bi bi-box-seam me-1"></i> ग्राहकाला धान्य दिले (Mark Delivered)
                                 </button>
                             </form>
+                        {% elif order.status == 'DELIVERED' %}
+                            <div class="alert alert-secondary text-center py-2 mb-0 small">
+                                <i class="bi bi-check-all text-success fs-5 me-1"></i> हे दळण ग्राहकाला वितरित (Delivered) झाले आहे.
+                            </div>
+                        {% elif order.status == 'CANCELLED' %}
+                            <div class="alert alert-danger text-center py-2 mb-0 small">
+                                <i class="bi bi-x-octagon fs-5 me-1"></i> ही ऑर्डर रद्द करण्यात आली आहे.
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -256,6 +263,86 @@
         </div>
     </div>
 </div>
+<!-- Modal: Complete Grinding Order with Output Weight & Wastage -->
+<div class="modal fade" id="completeOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-check2-circle me-1"></i> दळण पूर्ण नोंदणी (Complete Grinding)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'grinding_order_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="COMPLETED">
+                <div class="modal-body">
+                    <div class="alert alert-light border small mb-3">
+                        धान्य: <strong>{{ order.grain.display_name }}</strong> | भरडाई वजन: <strong>{{ order.input_kg|floatformat:3 }} KG</strong>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">तयार पीठाचे वजन (Output Weight KG) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.001" min="0.001" max="{{ order.input_kg }}" id="completeOutputKg" name="output_kg" class="form-control form-control-lg fw-bold text-success" value="{{ order.output_kg|default:order.input_kg }}" oninput="autoCalculateWastage()" required>
+                        <small class="text-muted">दळण पूर्ण झाल्यावर भरलेले प्रत्यक्ष वजन टाका.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">घट / उडून गेलेले पीठ (Wastage KG)</label>
+                        <input type="number" step="0.001" min="0" id="completeWastageKg" name="wastage_kg" class="form-control" value="{{ order.wastage_kg|default:'0.000' }}" readonly>
+                        <small class="text-muted">आपोआप हिशोब केला जातो: मूळ वजन - तयार वजन.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">रद्द करा</button>
+                    <button type="submit" class="btn btn-success px-4 fw-bold">पूर्ण नोंदवा व WhatsApp सूचना द्या</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Cancel Order -->
+<div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow border-0">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-x-circle me-1"></i> दळण ऑर्डर रद्द करा
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'grinding_order_status' order.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="status" value="CANCELLED">
+                <div class="modal-body">
+                    <div class="alert alert-danger py-2 small">
+                        <strong>सावधान:</strong> ही ऑर्डर रद्द केल्यास या ऑर्डरचे बिल रद्द होईल आणि साठा पूर्ववत केला जाईल.
+                    </div>
+                    <p class="mb-0">आपणास खात्री आहे का की ऑर्डर <strong>#{{ order.token_number|default:order.order_number }}</strong> रद्द करायची आहे?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">मागे जा</button>
+                    <button type="submit" class="btn btn-danger px-4">होय, ऑर्डर रद्द करा</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function autoCalculateWastage() {
+    const inputKg = parseFloat("{{ order.input_kg }}") || 0;
+    const outputEl = document.getElementById("completeOutputKg");
+    const wastageEl = document.getElementById("completeWastageKg");
+    if (outputEl && wastageEl) {
+        const out = parseFloat(outputEl.value) || 0;
+        const waste = Math.max(0, inputKg - out);
+        wastageEl.value = waste.toFixed(3);
+    }
+}
+</script>
+
 {% endblock %}
 
 {% block extra_scripts %}

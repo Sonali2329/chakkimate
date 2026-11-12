@@ -1,26 +1,78 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3">
+<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-truck text-primary me-1"></i> {{ tr.purchases }} (धान्य खरेदी)
+                <i class="bi bi-truck text-primary me-2"></i>{{ tr.purchases }} (धान्य खरेदी)
             </h4>
             <span class="text-muted small">
                 {% if current_lang == 'mr' %}शेतकरी किंवा व्यापार्यांकडून कच्च्या धान्याची खरेदी व देयके{% else %}Supplier Grain Purchases and Stock Inward{% endif %}
             </span>
         </div>
         <div>
-            <a href="{% url 'purchase_create' %}" class="btn btn-brand">
-                <i class="bi bi-plus-circle me-1"></i> + {{ tr.new_purchase }}
+            <a href="{% url 'purchase_create' %}" class="btn btn-primary fw-semibold shadow-sm w-100 text-center">
+                <i class="bi bi-plus-lg me-1"></i> + {{ tr.new_purchase }}
             </a>
         </div>
     </div>
 
-    <!-- Purchases Table -->
-    <div class="card shadow-sm border-0">
+    <!-- Mobile Card View (R01) -->
+    <div class="d-block d-md-none">
+        {% for p in purchases %}
+            <div class="card shadow-sm border mb-2.5 rounded-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <span class="fw-bold text-dark fs-6">{{ p.purchase_number }}</span>
+                            <div class="text-muted small">{{ p.purchase_date|date:"d M Y" }}</div>
+                        </div>
+                        <div>
+                            {% if p.payment_status == 'PAID' %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill">जमा (Paid)</span>
+                            {% elif p.payment_status == 'PARTIAL' %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill">अंशतः (Partial)</span>
+                            {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">बाकी (Unpaid)</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <div class="fw-bold text-dark">{{ p.supplier.name }}</div>
+                            <div class="text-muted small"><i class="bi bi-telephone text-primary"></i> {{ p.supplier.mobile }}</div>
+                        </div>
+                        <span class="badge bg-light text-dark border px-2 py-1">
+                            {{ p.items.count }} धान्य
+                        </span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <div>
+                            <div class="fw-bold text-dark">एकूण: ₹{{ p.total|floatformat:2 }}</div>
+                            <div class="small {% if p.balance_due > 0 %}text-danger fw-bold{% else %}text-muted{% endif %}">
+                                बाकी: ₹{{ p.balance_due|floatformat:2 }}
+                            </div>
+                        </div>
+                        <a href="{% url 'purchase_detail' p.id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+                            पावती पहा <i class="bi bi-chevron-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card shadow-sm border p-4 text-center text-muted">
+                <i class="bi bi-truck fs-1 d-block mb-2"></i>
+                कोणतीही खरेदी नोंद आढळली नाही.
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Desktop Purchases Table (R01) -->
+    <div class="card shadow-sm border-0 d-none d-md-block">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -84,5 +136,27 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+        <div class="small text-muted">
+            पृष्ठ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} (एकूण {{ page_obj.paginator.count }})
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo; मागे</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; मागे</span></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">पुढे &raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">पुढे &raquo;</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

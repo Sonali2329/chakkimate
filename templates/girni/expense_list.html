@@ -1,30 +1,93 @@
 {% extends 'girni/base.html' %}
 
 {% block content %}
-<div class="container-fluid px-3 px-lg-4 py-3">
+<div class="container-fluid px-3 px-lg-4 py-3 animate-fade-in">
     <!-- Header -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
         <div>
             <h4 class="fw-bold mb-0 text-dark">
-                <i class="bi bi-cash-stack text-danger me-1"></i> {{ tr.expenses }} (गिरणी खर्च नोंद)
+                <i class="bi bi-cash-stack text-danger me-2"></i>{{ tr.expenses }} (गिरणी खर्च नोंद)
             </h4>
             <span class="text-muted small">
                 {% if current_lang == 'mr' %}लाईट बिल, मशिन दुरुस्ती, पगार, हमाली व इतर खर्चाची नोंदणी{% else %}Electricity, Maintenance, Wages & Operations Expenses{% endif %}
             </span>
         </div>
-        <div class="d-flex align-items-center gap-3">
-            <div class="border rounded px-3 py-1 bg-white">
+        <div class="d-flex align-items-center gap-2">
+            <div class="border rounded px-3 py-1 bg-white shadow-sm">
                 <span class="text-muted small">एकूण खर्च:</span>
-                <span class="fw-bold text-danger fs-5">₹{{ total_expense|floatformat:2 }}</span>
+                <span class="fw-bold text-danger fs-5 ms-1">₹{{ total_expense|floatformat:2 }}</span>
             </div>
-            <a href="{% url 'expense_create' %}" class="btn btn-danger">
-                <i class="bi bi-plus-circle me-1"></i> + {% if current_lang == 'mr' %}नवीन खर्च नोंदवा{% else %}Add Expense{% endif %}
+            <a href="{% url 'expense_create' %}" class="btn btn-danger fw-semibold shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> + खर्च जोडा
             </a>
         </div>
     </div>
 
-    <!-- Expenses Table -->
-    <div class="card shadow-sm border-0">
+    <!-- Category Filter Pills -->
+    <div class="card mb-3 shadow-sm border-0">
+        <div class="card-body py-2 px-3 d-flex flex-wrap gap-1.5 align-items-center">
+            <span class="text-muted small fw-semibold me-2"><i class="bi bi-funnel me-1"></i>प्रकार:</span>
+            <a href="{% url 'expense_list' %}" class="btn btn-sm {% if not selected_category %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5">
+                सर्व खर्च
+            </a>
+            {% for cat_val, cat_label in categories %}
+                <a href="{% url 'expense_list' %}?category={{ cat_val }}" class="btn btn-sm {% if selected_category == cat_val %}btn-danger text-white{% else %}btn-outline-secondary{% endif %} rounded-pill px-2.5">
+                    {{ cat_label }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Mobile Card View (R01) -->
+    <div class="d-block d-md-none">
+        {% for e in expenses %}
+            <div class="card shadow-sm border mb-2.5 rounded-3">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-1.5">
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis fs-6 rounded-pill">
+                            {{ e.get_category_display }}
+                        </span>
+                        <span class="fw-bold text-danger fs-5">
+                            ₹{{ e.amount|floatformat:2 }}
+                        </span>
+                    </div>
+
+                    <div class="text-dark fw-semibold mb-1">{{ e.description|default:"-" }}</div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top small text-muted">
+                        <div>
+                            <span>{{ e.expense_date|date:"d M Y" }}</span> &bull; 
+                            <span class="badge bg-light text-dark border">{{ e.get_payment_mode_display }}</span>
+                        </div>
+                        <div class="d-flex gap-1.5 align-items-center">
+                            {% if e.receipt_file %}
+                                <a href="{{ e.receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill px-2 py-0.5" title="पावती">
+                                    <i class="bi bi-file-earmark-image"></i>
+                                </a>
+                            {% endif %}
+                            <a href="{% url 'expense_edit' e.id %}" class="btn btn-sm btn-outline-secondary rounded-pill px-2 py-0.5" title="संपादित करा">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" action="{% url 'expense_delete' e.id %}" class="d-inline" onsubmit="return confirm('खात्री आहे का? हा खर्च हटवायचा आहे?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2 py-0.5" title="हटवा">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="card shadow-sm border p-4 text-center text-muted">
+                <i class="bi bi-cash fs-1 d-block mb-2"></i>
+                कोणतीही खर्च नोंद आढळली नाही.
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Desktop Expenses Table (R01) -->
+    <div class="card shadow-sm border-0 d-none d-md-block">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
@@ -34,6 +97,7 @@
                         <th>तपशील (Description)</th>
                         <th>{{ tr.payment_mode }}</th>
                         <th class="text-end">{{ tr.charges }} (Amount)</th>
+                        <th class="text-end">पावती / कृती</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,10 +116,28 @@
                             <td class="text-end fw-bold text-danger fs-6">
                                 ₹{{ e.amount|floatformat:2 }}
                             </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1 align-items-center">
+                                    {% if e.receipt_file %}
+                                        <a href="{{ e.receipt_file.url }}" target="_blank" class="btn btn-sm btn-outline-info" title="पावती पहा">
+                                            <i class="bi bi-file-earmark-image"></i>
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'expense_edit' e.id %}" class="btn btn-sm btn-outline-secondary" title="संपादित करा">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="post" action="{% url 'expense_delete' e.id %}" class="d-inline" onsubmit="return confirm('खात्री आहे का? हा खर्च हटवायचा आहे?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="हटवा">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
                         </tr>
                     {% empty %}
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="bi bi-receipt-cutoff fs-2 d-block mb-2"></i>
                                 कोणतीही खर्च नोंद आढळली नाही.
                             </td>
@@ -65,5 +147,27 @@
             </table>
         </div>
     </div>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2">
+        <div class="small text-muted">
+            पृष्ठ {{ page_obj.number }} / {{ page_obj.paginator.num_pages }} (एकूण {{ page_obj.paginator.count }})
+        </div>
+        <ul class="pagination pagination-sm mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}">&laquo; मागे</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo; मागे</span></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}">पुढे &raquo;</a></li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">पुढे &raquo;</span></li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
