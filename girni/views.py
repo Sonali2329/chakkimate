@@ -168,7 +168,7 @@ def dashboard_view(request):
     for g in GrindingOrder.objects.filter(order_date__date=today).exclude(status='CANCELLED').select_related('customer', 'grain')[:10]:
         g_flow = 'INFLOW' if g.is_paid else 'CREDIT'
         g_status = 'पूर्ण (जमा)' if g.is_paid else 'बाकी (Unpaid)'
-        g_mode = g.get_payment_mode_display() if g.is_paid else 'उधार (बाकी)'
+        g_mode = (g.payment_mode or 'CASH') if g.is_paid else 'उधार (बाकी)'
         daybook_entries.append({
             'time': g.order_date,
             'type': 'GRINDING',
@@ -203,7 +203,7 @@ def dashboard_view(request):
                 flow = 'PARTIAL'
                 p_first = s.invoice.payments.first()
                 mode = p_first.get_payment_mode_display() if p_first else 'अर्धवट जमा'
-                status_txt = f"जमा ₹{s.invoice.amount_paid|floatformat:0} / बाकी ₹{s.invoice.balance_due|floatformat:0}"
+                status_txt = f"जमा ₹{s.invoice.amount_paid:.2f} / बाकी ₹{s.invoice.balance_due:.2f}"
             else:
                 flow = 'CREDIT'
                 mode = 'उधार (बाकी)'
